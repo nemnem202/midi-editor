@@ -1,6 +1,5 @@
 import type { TrackJSON } from "@tonejs/midi";
 import type { HeaderJSON } from "@tonejs/midi/dist/Header";
-
 export type People = {
   firstName: string;
   lastName: string;

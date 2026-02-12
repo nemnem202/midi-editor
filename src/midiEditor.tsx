@@ -14,6 +14,12 @@ import {
 import type { Note, NoteJSON } from "@tonejs/midi/dist/Note";
 import { Midi } from "@tonejs/midi";
 import { colorFromValue } from "./lib/utils";
+import { useHistoryState } from "@uidotdev/usehooks";
+
+class NoteGraphic extends Graphics {
+  noteData?: NoteJSON;
+  isSelected: boolean = false;
+}
 
 const PIANO_KEYS_WIDTH = 50;
 const TOTAL_NOTES = 128;
@@ -21,7 +27,15 @@ const getRowHeight = (app: Application) => app.screen.height / TOTAL_NOTES;
 
 export default function MidiEditor({ initProject }: { initProject: Project }) {
   const [project, setProject] = useState<Project>(initProject);
-  const [midiObject, setMidiObject] = useState<MidiObject | null>(null);
+  const {
+    state: midiObject,
+    set: setMidiObject,
+    undo,
+    redo,
+    clear,
+    canUndo,
+    canRedo,
+  } = useHistoryState<MidiObject | null>(null);
 
   const loadMidi = async () => {
     const midi = await Midi.fromUrl(project.midiFileUrl);
@@ -38,8 +52,37 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
   };
 
   useEffect(() => {
+    const loadMidi = async () => {
+      const midi = await Midi.fromUrl(project.midiFileUrl);
+      const json = midi.toJSON();
+      setMidiObject({
+        durationInTicks: midi.durationTicks,
+        header: json.header,
+        tracks: json.tracks,
+      });
+    };
     loadMidi();
   }, []);
+
+  useEffect(() => {
+    const listenKeyDown = (e: KeyboardEvent) => {
+      if (!e.ctrlKey) return;
+
+      if (e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      } else if (e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", listenKeyDown);
+    return () => window.removeEventListener("keydown", listenKeyDown);
+  }, [undo, redo]);
+
+  useEffect(() => {
+    console.log("midi object changed");
+  }, [midiObject]);
 
   useEffect(() => {
     console.log(project);
@@ -64,15 +107,19 @@ function PianoRoll({
   setMidiObject,
 }: {
   midiObject: MidiObject;
-  setMidiObject: Dispatch<SetStateAction<MidiObject | null>>;
+  setMidiObject: (newPresent: MidiObject | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const contentRef = useRef<Container | null>(null);
   const gridGraphics = useRef<Graphics | null>(null);
   const notesContainer = useRef<Container | null>(null);
-
   const [pixiReady, setPixiReady] = useState(false);
+
+  const midiRef = useRef(midiObject);
+  useEffect(() => {
+    midiRef.current = midiObject;
+  }, [midiObject]);
 
   useEffect(() => {
     let isMounted = true;
@@ -140,21 +187,17 @@ function PianoRoll({
         if (!notesContainer.current) return;
 
         const selectedNotesData = notesContainer.current.children
-          .filter((child) => (child as any).isSelected)
-          .map((child) => (child as any).noteData);
+          .filter((child) => (child as NoteGraphic).isSelected)
+          .map((child) => (child as NoteGraphic).noteData);
 
         if (selectedNotesData.length === 0) return;
 
-        setMidiObject((prev) => {
-          if (!prev) return null;
-
-          return {
-            ...prev,
-            tracks: prev.tracks.map((track) => ({
-              ...track,
-              notes: track.notes.filter((note) => !selectedNotesData.includes(note)),
-            })),
-          };
+        setMidiObject({
+          ...midiRef.current,
+          tracks: midiRef.current.tracks.map((track) => ({
+            ...track,
+            notes: track.notes.filter((note) => !selectedNotesData.includes(note)),
+          })),
         });
       }
     };
@@ -254,7 +297,7 @@ function PianoRoll({
         container.scale.y = Math.max(container.scale.y * factor, 1);
         container.scale.y = Math.min(container.scale.y, 20);
       } else {
-        const minScaleX = app.screen.width / midiObject.durationInTicks;
+        const minScaleX = app.screen.width / midiRef.current.durationInTicks;
         const targetScaleX = container.scale.x * factor;
         container.scale.x = Math.max(targetScaleX, minScaleX);
       }
@@ -267,7 +310,7 @@ function PianoRoll({
       container.x = Math.min(container.x, PIANO_KEYS_WIDTH);
       container.y = Math.min(container.y, 0);
 
-      const contentWidth = midiObject.durationInTicks * container.scale.x;
+      const contentWidth = midiRef.current.durationInTicks * container.scale.x;
       const minX = app.screen.width - contentWidth;
       container.x = Math.max(container.x, minX);
 
@@ -365,7 +408,7 @@ function PianoRoll({
       container.x = Math.min(container.x, PIANO_KEYS_WIDTH);
       container.y = Math.min(container.y, 0);
 
-      const contentWidth = midiObject.durationInTicks * container.scale.x;
+      const contentWidth = midiRef.current.durationInTicks * container.scale.x;
       const minX = app.screen.width - contentWidth;
       container.x = Math.max(container.x, minX);
 
@@ -401,9 +444,9 @@ function PianoRoll({
 
     notesLayer.removeChildren().forEach((child) => child.destroy());
 
-    midiObject.tracks.forEach((track) => {
+    midiRef.current.tracks.forEach((track) => {
       track.notes.forEach((note) => {
-        const noteGraphic = new Graphics();
+        const noteGraphic = new NoteGraphic();
         noteGraphic.rect(0, 0, note.durationTicks, rowHeight);
         noteGraphic.fill(colorFromValue(track.channel));
 
@@ -412,10 +455,10 @@ function PianoRoll({
         noteGraphic.eventMode = "static";
         noteGraphic.cursor = "pointer";
 
-        (noteGraphic as any).noteData = note;
-        (noteGraphic as any).isSelected = false;
+        noteGraphic.noteData = note;
+        noteGraphic.isSelected = false;
 
-        attachNoteEvents(noteGraphic, note);
+        attachNoteEvents(app, container, noteGraphic, note);
         notesLayer.addChild(noteGraphic);
       });
     });
@@ -453,19 +496,27 @@ function PianoRoll({
       gridGraphics.beginPath();
       const firstVisibleTick = Math.floor(viewLeftTick / tickStep) * tickStep;
       for (let i = firstVisibleTick; i <= viewRightTick; i += tickStep) {
-        if (i < 0 || i > midiObject.durationInTicks) continue;
+        if (i < 0 || i > midiRef.current.durationInTicks) continue;
         gridGraphics.moveTo(i, 0).lineTo(i, app.screen.height);
       }
       gridGraphics.stroke({ color, pixelLine: true });
     };
 
-    const ppq = midiObject.header.ppq;
+    const ppq = midiRef.current.header.ppq;
     drawSubdivisions(ppq / 4, "#222222", 15);
     drawSubdivisions(ppq, "#333333", 10);
     drawSubdivisions(ppq * 4, "#444444", 5);
   };
 
-  const attachNoteEvents = (graphic: Graphics, noteData: NoteJSON) => {
+  const attachNoteEvents = (
+    app: Application,
+    container: Container,
+    graphic: Graphics,
+    noteData: NoteJSON,
+  ) => {
+    let dragInitialStates: Map<Graphics, { x: number; y: number }> | null = null;
+    let dragStartMousePos: { x: number; y: number } | null = null;
+
     graphic.on("pointerover", () => {
       graphic.alpha = 0.7;
     });
@@ -476,16 +527,82 @@ function PianoRoll({
 
     graphic.on("rightclick", (e) => {
       e.stopPropagation();
-      setMidiObject((prev) => {
-        if (!prev) return null;
+      setMidiObject({
+        ...midiRef.current,
+        tracks: midiRef.current.tracks.map((t) => ({
+          ...t,
+          notes: t.notes.filter((n) => n !== noteData),
+        })),
+      });
+    });
 
-        return {
-          ...prev,
-          tracks: prev.tracks.map((t) => ({
-            ...t,
-            notes: t.notes.filter((n) => n !== noteData),
-          })),
-        };
+    const finalizeDrag = () => {
+      if (!dragInitialStates) return;
+
+      const currentRowHeight = getRowHeight(app);
+
+      const movedNotesMap = new Map();
+      dragInitialStates.forEach((_, noteGraphic) => {
+        const g = noteGraphic as any;
+        const newMidi = 127 - Math.round(g.y / currentRowHeight);
+        movedNotesMap.set(g.noteData, { ticks: g.x, midi: newMidi });
+        g.alpha = 1;
+      });
+
+      setMidiObject({
+        ...midiRef.current,
+        tracks: midiRef.current.tracks.map((track) => ({
+          ...track,
+          notes: track.notes.map((note) => {
+            const update = movedNotesMap.get(note);
+            return update ? { ...note, ticks: update.ticks, midi: update.midi } : note;
+          }),
+        })),
+      });
+
+      dragInitialStates = null;
+      dragStartMousePos = null;
+    };
+
+    graphic.on("pointerup", finalizeDrag);
+    graphic.on("pointerupoutside", finalizeDrag);
+
+    graphic.on("globalpointermove", (e) => {
+      if (!dragInitialStates || !dragStartMousePos) return;
+
+      const currentRowHeight = getRowHeight(app);
+      const currentMousePos = container.toLocal(e.global);
+
+      const dx = currentMousePos.x - dragStartMousePos.x;
+      const dy = currentMousePos.y - dragStartMousePos.y;
+
+      dragInitialStates.forEach((initialPos, noteGraphic) => {
+        noteGraphic.x = initialPos.x + dx;
+
+        const rawY = initialPos.y + dy;
+        noteGraphic.y = Math.round(rawY / currentRowHeight) * currentRowHeight;
+      });
+    });
+
+    graphic.on("pointerdown", (e) => {
+      if (e.button === 2) return;
+      e.stopPropagation();
+
+      const noteGraphic = graphic as any;
+      if (!noteGraphic.isSelected) {
+        noteGraphic.isSelected = true;
+        noteGraphic.tint = "red";
+      }
+
+      dragStartMousePos = container.toLocal(e.global);
+
+      dragInitialStates = new Map();
+      notesContainer.current?.children.forEach((child) => {
+        const c = child as any;
+        if (c.isSelected && c instanceof Graphics) {
+          dragInitialStates?.set(c, { x: c.x, y: c.y });
+          c.alpha = 0.5;
+        }
       });
     });
   };
