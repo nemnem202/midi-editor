@@ -21,7 +21,13 @@ class NoteGraphic extends Graphics {
   isSelected: boolean = false;
 }
 
+class NoteVelocityGraphic extends Graphics {
+  noteData?: NoteJSON;
+  isSelected: boolean = false;
+}
+
 const PIANO_KEYS_WIDTH = 50;
+const VELOCITY_ZONE_HEIGHT = 200;
 const TOTAL_NOTES = 128;
 const getRowHeight = (app: Application) => app.screen.height / TOTAL_NOTES;
 
@@ -32,24 +38,7 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
     set: setMidiObject,
     undo,
     redo,
-    clear,
-    canUndo,
-    canRedo,
   } = useHistoryState<MidiObject | null>(null);
-
-  const loadMidi = async () => {
-    const midi = await Midi.fromUrl(project.midiFileUrl);
-    const json = midi.toJSON();
-    setMidiObject({
-      durationInTicks: midi.durationTicks,
-      header: json.header,
-      tracks: json.tracks,
-    });
-    const sig = midi.header.timeSignatures[0].timeSignature;
-    const bpm = midi.header.tempos[0].bpm;
-    const title = midi.name !== "" ? midi.name : project.title;
-    setProject((prev) => ({ ...prev, signature: [sig[0], sig[1]], bpm: bpm, title }));
-  };
 
   useEffect(() => {
     const loadMidi = async () => {
@@ -112,11 +101,15 @@ function PianoRoll({
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const contentRef = useRef<Container | null>(null);
+  const pianoRollContainerRef = useRef<Container | null>(null);
+  const velocityRef = useRef<Container | null>(null);
   const gridGraphics = useRef<Graphics | null>(null);
-  const notesContainer = useRef<Container | null>(null);
+  const pianoKeysRef = useRef<Container | null>(null);
+  const notesContainer = useRef<Container<NoteGraphic> | null>(null);
   const [pixiReady, setPixiReady] = useState(false);
 
   const midiRef = useRef(midiObject);
+
   useEffect(() => {
     midiRef.current = midiObject;
   }, [midiObject]);
@@ -153,24 +146,43 @@ function PianoRoll({
 
       containerRef.current!.appendChild(app.canvas);
 
+      const pianoRollContainer = new Container({
+        eventMode: "passive",
+      });
+
+      const pianoRollMask = new Graphics();
+
       const content = new Container({
         x: PIANO_KEYS_WIDTH,
         cullableChildren: true,
         eventMode: "dynamic",
       });
 
+      app.stage.addChild(pianoRollMask);
+      pianoRollContainer.mask = pianoRollMask;
+
       const grid = new Graphics({ eventMode: "passive" });
-      const notes = new Container();
+      const notes = new Container<NoteGraphic>();
       const selectSquare = new Graphics({ eventMode: "passive" });
       const pianoKeys = createPianoKeys(app);
 
       content.addChild(grid);
       content.addChild(notes);
       content.addChild(selectSquare);
-      app.stage.addChild(content);
-      app.stage.addChild(pianoKeys);
+      pianoRollContainer.addChild(content);
+      pianoRollContainer.addChild(pianoKeys);
+      app.stage.addChild(pianoRollContainer);
+
+      const updateMasks = () => {
+        const w = app.screen.width;
+        const h = app.screen.height - VELOCITY_ZONE_HEIGHT;
+        pianoRollMask.clear().rect(0, 0, w, h).fill(0xffffff);
+      };
+
+      updateMasks();
 
       contentRef.current = content;
+      pianoRollContainerRef.current = pianoRollContainer;
       gridGraphics.current = grid;
       notesContainer.current = notes;
 
@@ -294,10 +306,13 @@ function PianoRoll({
       const factor = isZoomIn ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
 
       if (e.shiftKey) {
-        container.scale.y = Math.max(container.scale.y * factor, 1);
+        container.scale.y = Math.max(
+          container.scale.y * factor,
+          (app.screen.height - VELOCITY_ZONE_HEIGHT) / app.screen.height,
+        );
         container.scale.y = Math.min(container.scale.y, 20);
       } else {
-        const minScaleX = app.screen.width / midiRef.current.durationInTicks;
+        const minScaleX = (app.screen.width - PIANO_KEYS_WIDTH) / midiRef.current.durationInTicks;
         const targetScaleX = container.scale.x * factor;
         container.scale.x = Math.max(targetScaleX, minScaleX);
       }
@@ -316,17 +331,17 @@ function PianoRoll({
 
       const contentHeight = app.screen.height * container.scale.y;
       const minY = app.screen.height - contentHeight;
-      container.y = Math.max(container.y, minY);
+      container.y = Math.max(container.y, minY - VELOCITY_ZONE_HEIGHT);
 
       pianoKeys.y = container.y;
       pianoKeys.scale.y = container.scale.y;
       updateHitbox(app, container);
-
       drawGrid(app, container, gridGraphics);
     });
 
     updateHitbox(app, container);
   };
+
   const rectsIntersect = (a: any, b: any) => {
     return (
       a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
@@ -414,7 +429,7 @@ function PianoRoll({
 
       const contentHeight = app.screen.height * container.scale.y;
       const minY = app.screen.height - contentHeight;
-      container.y = Math.max(container.y, minY);
+      container.y = Math.max(container.y, minY - VELOCITY_ZONE_HEIGHT);
 
       pianoKeys.y = container.y;
 
@@ -439,7 +454,11 @@ function PianoRoll({
     container.on("pointerupoutside", stopDragOrSelect);
   };
 
-  const drawNotes = (app: Application, container: Container, notesLayer: Container) => {
+  const drawNotes = (
+    app: Application,
+    container: Container,
+    notesLayer: Container<NoteGraphic>,
+  ) => {
     const rowHeight = getRowHeight(app);
 
     notesLayer.removeChildren().forEach((child) => child.destroy());
@@ -585,7 +604,7 @@ function PianoRoll({
     });
 
     graphic.on("pointerdown", (e) => {
-      if (e.button === 2) return;
+      if (e.button === 2 || e.altKey) return;
       e.stopPropagation();
 
       const noteGraphic = graphic as any;
@@ -622,5 +641,9 @@ function PianoRoll({
     }
   };
 
-  return <div className="w-full h-full" ref={containerRef} onKeyDown={handleKeydown} />;
+  return (
+    <div className="flex flex-col w-full h-full gap-5">
+      <div className="w-full h-full" ref={containerRef} onKeyDown={handleKeydown} />
+    </div>
+  );
 }

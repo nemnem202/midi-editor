@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import MidiEditor from "./midiEditor";
 import DEFAULT_PROJECT from "../config/default/project";
