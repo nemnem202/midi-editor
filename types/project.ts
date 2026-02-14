@@ -1,5 +1,8 @@
-import type { TrackJSON } from "@tonejs/midi";
+import type { ControlChangesJSON } from "@tonejs/midi/dist/ControlChanges";
 import type { HeaderJSON } from "@tonejs/midi/dist/Header";
+import type { InstrumentJSON } from "@tonejs/midi/dist/Instrument";
+import type { NoteJSON } from "@tonejs/midi/dist/Note";
+import type { PitchBendJSON } from "@tonejs/midi/dist/PitchBend";
 export type People = {
   firstName: string;
   lastName: string;
@@ -22,8 +25,22 @@ export type Project = {
   midiFileUrl: string;
 };
 
+export interface Note extends NoteJSON {
+  isSelected: boolean;
+}
+
+export interface Track {
+  name: string;
+  notes: Note[];
+  channel: number;
+  instrument: InstrumentJSON;
+  controlChanges: ControlChangesJSON;
+  pitchBends: PitchBendJSON[];
+  endOfTrackTicks?: number;
+}
+
 export type MidiObject = {
   header: HeaderJSON;
   durationInTicks: number;
-  tracks: TrackJSON[];
+  tracks: Track[];
 };

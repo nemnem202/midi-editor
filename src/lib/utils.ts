@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { MidiObject, Note } from "types/project";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,4 +39,29 @@ export function colorFromValue(value: number, whitenPercent: number = 0): string
   const lightness = baseLightness + (100 - baseLightness) * (whiten / 100);
 
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+export function getMidiLength(midiObject: MidiObject): number {
+  let midiLength = 0;
+  const tracks = midiObject.tracks;
+  for (let i = 0, tlen = tracks.length; i < tlen; i++) {
+    const notes = tracks[i].notes;
+    for (let j = 0, nlen = notes.length; j < nlen; j++) {
+      const note = notes[j];
+      const end = note.ticks + note.durationTicks;
+      if (end > midiLength) midiLength = end;
+    }
+  }
+
+  return midiLength;
+}
+
+export function getMidiLengthFromNotes(notes: Note[]): number {
+  let midiLength = 0;
+  for (let j = 0, nlen = notes.length; j < nlen; j++) {
+    const note = notes[j];
+    const end = note.ticks + note.durationTicks;
+    if (end > midiLength) midiLength = end;
+  }
+  return midiLength;
 }

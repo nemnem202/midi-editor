@@ -4,11 +4,12 @@ import { Spinner } from "./components/ui/spinner";
 import { Midi } from "@tonejs/midi";
 import { useHistoryState } from "@uidotdev/usehooks";
 import PianoRollEngine from "./pianoRollEngine";
-import type { Command } from "./commands";
+import { DeleteSelectedNotesCommand, SelectAllNotesCommand, type Command } from "./commands";
 
 export default function MidiEditor({ initProject }: { initProject: Project }) {
   const [project, setProject] = useState<Project>(initProject);
   const [isLoading, setIsLoading] = useState(true);
+
   const {
     state: midiObject,
     set: setMidiObject,
@@ -17,6 +18,40 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
     canUndo,
     canRedo,
   } = useHistoryState<MidiObject | null>(null);
+
+  const midiRef = useRef(midiObject);
+  useEffect(() => {
+    midiRef.current = midiObject;
+  }, [midiObject]);
+
+  useEffect(() => {
+    const listenKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const currentMidi = midiRef.current;
+      if (!currentMidi) return;
+      if (e.ctrlKey) {
+        if (key === "z" && canUndo) {
+          e.preventDefault();
+          undo();
+        } else if (key === "y" && canRedo) {
+          e.preventDefault();
+          redo();
+        } else if (key === "a") {
+          e.preventDefault();
+          setMidiObject(new SelectAllNotesCommand().execute(currentMidi));
+        }
+      } else if (e.altKey) {
+      } else if (e.shiftKey) {
+      } else {
+        if (key === "backspace" || key === "delete") {
+          e.preventDefault();
+          setMidiObject(new DeleteSelectedNotesCommand().execute(currentMidi));
+        }
+      }
+    };
+    window.addEventListener("keydown", listenKeyDown);
+    return () => window.removeEventListener("keydown", listenKeyDown);
+  }, [undo, redo, canUndo, canRedo]);
 
   useEffect(() => {
     const loadMidi = async () => {
@@ -27,27 +62,17 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
         header: json.header,
         tracks: json.tracks,
       };
-      setMidiObject(initialMidiObject);
+      setMidiObject({
+        ...initialMidiObject,
+        tracks: initialMidiObject.tracks.map((track) => ({
+          ...track,
+          notes: track.notes.map((n) => ({ ...n, isSelected: false })),
+        })),
+      });
       setIsLoading(false);
     };
     loadMidi();
   }, []);
-
-  useEffect(() => {
-    const listenKeyDown = (e: KeyboardEvent) => {
-      if (!e.ctrlKey) return;
-      const key = e.key.toLowerCase();
-      if (key === "z" && canUndo) {
-        e.preventDefault();
-        undo();
-      } else if (key === "y" && canRedo) {
-        e.preventDefault();
-        redo();
-      }
-    };
-    window.addEventListener("keydown", listenKeyDown);
-    return () => window.removeEventListener("keydown", listenKeyDown);
-  }, [undo, redo, canUndo, canRedo]);
 
   useEffect(() => {
     console.log("midi object changed", midiObject);
