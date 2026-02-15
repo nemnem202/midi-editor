@@ -120,7 +120,7 @@ export class AddNotesCommand implements Command<MidiObject> {
         return {
           ...track,
           // concat renvoie un nouveau tableau, c'est parfait
-          notes: track.notes.concat(this.notes.map((n) => ({ ...n, isSelected: false }))),
+          notes: track.notes.concat(this.notes),
         };
       }),
       durationInTicks: Math.max(getMidiLengthFromNotes(this.notes), state.durationInTicks),

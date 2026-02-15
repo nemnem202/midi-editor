@@ -17,29 +17,12 @@ export class SelectionController {
   constructor(deps: SelectionDeps) {
     this.deps = deps;
   }
-
-  attach() {
-    const { notesGrid } = this.deps;
-
-    notesGrid.on("rightdown", (e) => {
-      console.log("right down");
-      const pos = e.getLocalPosition(notesGrid);
-      this.selectionOrigin = { x: pos.x, y: pos.y };
-    });
-
-    notesGrid.on("pointerdown", () => {
-      this.deps.onCommand(new UnSelectAllNotesCommand([]));
-    });
-
-    notesGrid.on("globalpointermove", (e) => {
-      this.tryDrawSelection(e);
-    });
-
-    notesGrid.on("pointerup", (e) => this.finalize(e));
-    notesGrid.on("pointerupoutside", (e) => this.finalize(e));
+  updateSelectionOrigin(e: FederatedPointerEvent) {
+    const pos = e.getLocalPosition(this.deps.notesGrid);
+    this.selectionOrigin = { x: pos.x, y: pos.y };
   }
 
-  private tryDrawSelection(e: FederatedPointerEvent) {
+  tryDrawSelection(e: FederatedPointerEvent) {
     if (!this.selectionOrigin) return;
 
     const { notesGrid, selectSquare } = this.deps;
@@ -59,7 +42,7 @@ export class SelectionController {
       .stroke({ color: 0xffffff, width: 1, alpha: 0.5 });
   }
 
-  private finalize(e: FederatedPointerEvent) {
+  finalize(e: FederatedPointerEvent) {
     if (!this.selectionOrigin) return;
 
     const { notesGrid, notesContainer, selectSquare, onCommand } = this.deps;
@@ -92,6 +75,10 @@ export class SelectionController {
 
     selectSquare.clear();
     this.selectionOrigin = null;
+  }
+
+  unselectAll() {
+    this.deps.onCommand(new UnSelectAllNotesCommand([]));
   }
 
   private rectsIntersect(a: any, b: any) {

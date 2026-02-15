@@ -22,15 +22,7 @@ export default class ViewportController {
     this.deps = deps;
   }
 
-  attachZoom() {
-    const { notesGrid } = this.deps;
-
-    notesGrid.on("wheel", (e: FederatedWheelEvent) => {
-      this.handleZoom(e);
-    });
-  }
-
-  private handleZoom(e: FederatedWheelEvent) {
+  handleZoom(e: FederatedWheelEvent) {
     const { notesGrid, velocityContainer, pianoKeysContainer, midiObject, appScreen, constants } =
       this.deps;
 

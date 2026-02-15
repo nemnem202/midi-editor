@@ -16,24 +16,7 @@ export class PanController {
     this.deps = deps;
   }
 
-  attach() {
-    const { notesGrid } = this.deps;
-
-    notesGrid.on("pointerdown", (e) => {
-      if (e.button === 0 && e.altKey) {
-        this.lastDragPos = { x: e.global.x, y: e.global.y };
-      }
-    });
-
-    notesGrid.on("globalpointermove", (e) => {
-      this.tryPan(e);
-    });
-
-    notesGrid.on("pointerup", () => (this.lastDragPos = null));
-    notesGrid.on("pointerupoutside", () => (this.lastDragPos = null));
-  }
-
-  private tryPan(e: FederatedPointerEvent) {
+  tryPan(e: FederatedPointerEvent) {
     if (!this.lastDragPos) return;
 
     const { notesGrid, pianoKeysContainer, velocityContainer, constrain, onAfterPan } = this.deps;
@@ -52,5 +35,13 @@ export class PanController {
     this.lastDragPos = { x: e.global.x, y: e.global.y };
 
     onAfterPan?.();
+  }
+
+  updateLastDragPos(e: FederatedPointerEvent) {
+    this.lastDragPos = { x: e.global.x, y: e.global.y };
+  }
+
+  releaseLastDragPos() {
+    this.lastDragPos = null;
   }
 }

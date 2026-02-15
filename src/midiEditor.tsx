@@ -37,9 +37,6 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
         } else if (key === "y" && canRedo) {
           e.preventDefault();
           redo();
-        } else if (key === "a") {
-          e.preventDefault();
-          setMidiObject(new SelectAllNotesCommand().execute(currentMidi));
         }
       } else if (e.altKey) {
       } else if (e.shiftKey) {

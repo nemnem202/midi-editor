@@ -8,7 +8,7 @@ interface KeyboardDeps {
   };
 }
 
-export default class KeyboardRenderer {
+export default class PianoKeyboardRenderer {
   constructor(private deps: KeyboardDeps) {
     this.deps = deps;
   }

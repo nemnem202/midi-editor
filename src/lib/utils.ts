@@ -65,3 +65,12 @@ export function getMidiLengthFromNotes(notes: Note[]): number {
   }
   return midiLength;
 }
+
+export function findFirstNoteTick(notes: Note[]): number {
+  let ticks = undefined;
+  for (let j = 0, nlen = notes.length; j < nlen; j++) {
+    const note = notes[j];
+    if (!ticks || note.ticks < ticks) ticks = note.ticks;
+  }
+  return ticks ?? 0;
+}
