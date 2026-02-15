@@ -44,3 +44,10 @@ export type MidiObject = {
   durationInTicks: number;
   tracks: Track[];
 };
+
+export type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};

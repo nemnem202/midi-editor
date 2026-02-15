@@ -6,7 +6,7 @@ import {
   Graphics,
   Rectangle,
 } from "pixi.js";
-import type { MidiObject, Note } from "types/project";
+import type { MidiObject, Note, Rect } from "types/project";
 import { colorFromValue } from "./lib/utils";
 import {
   DeleteNoteCommand,
@@ -144,27 +144,19 @@ export default class PianoRollEngine {
     );
   };
   private updateMidiSize = () => {
-    // 1. NE JAMAIS faire this.notes_grid_container.width = ...
-    // Cela écrase le scale.x calculé par le zoom.
-
-    // 2. Vérifier si le zoom actuel est toujours valide pour la nouvelle durée
     const minScaleX = (this.app.screen.width - PIANO_KEYS_WIDTH) / this.midi_object.durationInTicks;
     if (this.notes_grid_container.scale.x < minScaleX) {
       this.notes_grid_container.scale.x = minScaleX;
     }
 
-    // 3. Recalculer les limites de position pour éviter de voir du vide à droite
-    // si le nouveau morceau est plus court que le précédent.
     const contentWidth = this.midi_object.durationInTicks * this.notes_grid_container.scale.x;
     const minX = this.app.screen.width - contentWidth;
 
-    // On recadre la position X si elle dépasse les nouvelles limites
     this.notes_grid_container.x = Math.max(
       Math.min(this.notes_grid_container.x, PIANO_KEYS_WIDTH),
       minX,
     );
 
-    // Synchronisation de la zone de vélocité
     this.velocity_container.x = this.notes_grid_container.x;
     this.velocity_container.scale.x = this.notes_grid_container.scale.x;
   };
@@ -204,7 +196,7 @@ export default class PianoRollEngine {
   };
   private getRowHeight = () => this.app.screen.height / TOTAL_NOTES;
   private isBlackKey = (midi: number) => [1, 3, 6, 8, 10].includes(midi % 12);
-  private rectsIntersect = (a: any, b: any) => {
+  private rectsIntersect = (a: Rect, b: Rect) => {
     return (
       a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
     );
@@ -258,7 +250,9 @@ export default class PianoRollEngine {
     this.midi_object.tracks.forEach((track) => {
       track.notes.forEach((note) => {
         const noteGraphic = new NoteGraphic();
-        noteGraphic.rect(0, 0, note.durationTicks, rowHeight);
+        noteGraphic
+          .rect(0, 0, note.durationTicks, rowHeight)
+          .stroke({ color: "#000000", pixelLine: true });
         noteGraphic.fill(colorFromValue(track.channel));
 
         noteGraphic.x = note.ticks;
@@ -281,14 +275,6 @@ export default class PianoRollEngine {
     let dragInitialStates: Map<NoteGraphic, { x: number; y: number }> | null = null;
     let dragStartMousePos: { x: number; y: number } | null = null;
 
-    // graphic.on("pointerover", () => {
-    //   graphic.alpha = 0.7;
-    // });
-
-    // graphic.on("pointerout", () => {
-    //   graphic.alpha = 1;
-    // });
-
     graphic.on("rightclick", (e) => {
       e.stopPropagation();
       if (graphic.noteData) this.onCommand(new DeleteNoteCommand(graphic.noteData));
@@ -307,7 +293,6 @@ export default class PianoRollEngine {
         const newMidi = 127 - Math.round(g.y / currentRowHeight);
 
         movedNotesMap.set(g.noteData, { ticks: g.x, midi: newMidi });
-        // g.alpha = 1;
       });
       if (!reached_zero)
         this.onCommand(
@@ -363,7 +348,6 @@ export default class PianoRollEngine {
         const c = child;
         if (c.noteData.isSelected) {
           dragInitialStates?.set(c, { x: c.x, y: c.y });
-          // c.alpha = 0.5;
         }
       });
     });
@@ -465,7 +449,6 @@ export default class PianoRollEngine {
   private attachPointerEvents = () => {
     let lastDragPos: { x: number; y: number } | null = null;
     let selectionOrigin: { x: number; y: number } | null = null;
-
     this.app.canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
     this.notes_grid_container.on("rightdown", (e) => {
@@ -474,7 +457,7 @@ export default class PianoRollEngine {
     });
 
     this.notes_grid_container.on("pointerdown", (e) => {
-      if (e.altKey) {
+      if (e.button === 0 && e.altKey) {
         lastDragPos = { x: e.global.x, y: e.global.y };
       }
       this.onCommand(new UnSelectAllNotesCommand([]));
@@ -484,6 +467,8 @@ export default class PianoRollEngine {
       if (!selectionOrigin) return;
 
       const pos = e.getLocalPosition(this.notes_grid_container);
+
+      console.log;
 
       const selectionRect = {
         x: Math.min(pos.x, selectionOrigin.x),
@@ -497,23 +482,6 @@ export default class PianoRollEngine {
         .rect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height)
         .fill({ color: 0xffffff, alpha: 0.3 })
         .stroke({ color: 0xffffff, width: 1, alpha: 0.5 });
-
-      const selectedNotes: Note[] = [];
-
-      this.notes_container.children.forEach((noteGraphic) => {
-        const noteRect = {
-          x: noteGraphic.x,
-          y: noteGraphic.y,
-          width: (noteGraphic as any)._width || noteGraphic.width,
-          height: (noteGraphic as any)._height || noteGraphic.height,
-        };
-
-        const isSelected = this.rectsIntersect(selectionRect, noteRect);
-
-        if (isSelected) selectedNotes.push(noteGraphic.noteData);
-      });
-
-      this.onCommand(new SelectNotesCommand(selectedNotes));
     };
 
     const tryDraggingContainer = (e: FederatedPointerEvent) => {
@@ -551,7 +519,32 @@ export default class PianoRollEngine {
       trySelectZone(e);
     });
 
-    const stopDragOrSelect = () => {
+    const stopDragOrSelect = (e: FederatedPointerEvent) => {
+      if (selectionOrigin) {
+        const pos = e.getLocalPosition(this.notes_grid_container);
+        const selectionRect = {
+          x: Math.min(pos.x, selectionOrigin.x),
+          y: Math.min(pos.y, selectionOrigin.y),
+          width: Math.abs(pos.x - selectionOrigin.x),
+          height: Math.abs(pos.y - selectionOrigin.y),
+        };
+
+        let selectedNotes: Note[] = [];
+        this.notes_container.children.forEach((noteGraphic) => {
+          const noteRect = {
+            x: noteGraphic.x,
+            y: noteGraphic.y,
+            width: (noteGraphic as any)._width || noteGraphic.width,
+            height: (noteGraphic as any)._height || noteGraphic.height,
+          };
+
+          const isSelected = this.rectsIntersect(selectionRect, noteRect);
+
+          if (isSelected) selectedNotes.push(noteGraphic.noteData);
+        });
+
+        this.onCommand(new SelectNotesCommand(selectedNotes));
+      }
       this.select_square.clear();
       lastDragPos = null;
       selectionOrigin = null;
@@ -560,6 +553,7 @@ export default class PianoRollEngine {
     this.notes_grid_container.on("pointerup", stopDragOrSelect);
     this.notes_grid_container.on("pointerupoutside", stopDragOrSelect);
   };
+
   private drawVelocityGrid = () => {
     this.velocityGrid.clear();
 

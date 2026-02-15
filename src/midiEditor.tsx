@@ -74,9 +74,9 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
     loadMidi();
   }, []);
 
-  useEffect(() => {
-    console.log("midi object changed", midiObject);
-  }, [midiObject]);
+  // useEffect(() => {
+  //   console.log("midi object changed", midiObject);
+  // }, [midiObject]);
 
   useEffect(() => {
     console.log(project);

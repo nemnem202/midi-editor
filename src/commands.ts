@@ -63,35 +63,28 @@ export class DeleteSelectedNotesCommand implements Command<MidiObject> {
 }
 
 export class SelectNotesCommand implements Command<MidiObject> {
-  constructor(private notes: Note[]) {}
+  constructor(private notesToSelect: Note[]) {}
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
       tracks: state.tracks.map((track) => ({
         ...track,
-        notes: track.notes.map((n) => {
-          if (this.notes.includes(n)) {
-            n.isSelected = true;
-          } else {
-            n.isSelected = false;
-          }
-          return n;
-        }),
+        notes: track.notes.map((n) => ({
+          ...n,
+          isSelected: this.notesToSelect.some((nt) => nt.ticks === n.ticks && nt.midi === n.midi),
+        })),
       })),
     };
   }
 }
-
 export class SelectAllNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
       tracks: state.tracks.map((track) => ({
         ...track,
-        notes: track.notes.map((n) => {
-          n.isSelected = true;
-          return n;
-        }),
+        // On crée de NOUVEAUX objets notes avec le spread {...n}
+        notes: track.notes.map((n) => ({ ...n, isSelected: true })),
       })),
     };
   }
@@ -105,8 +98,8 @@ export class UnSelectAllNotesCommand implements Command<MidiObject> {
       tracks: state.tracks.map((track) => ({
         ...track,
         notes: track.notes.map((n) => {
-          if (!this.excepted.includes(n)) n.isSelected = false;
-          return n;
+          const isExcepted = this.excepted.some((e) => e.ticks === n.ticks && e.midi === n.midi);
+          return { ...n, isSelected: isExcepted ? n.isSelected : false };
         }),
       })),
     };
@@ -120,14 +113,17 @@ export class AddNotesCommand implements Command<MidiObject> {
   ) {}
 
   execute(state: MidiObject): MidiObject {
-    const tracks = state.tracks;
-    tracks[this.trackIndex].notes.concat(this.notes);
-    const notesMidiLength = getMidiLengthFromNotes(this.notes);
-
     return {
       ...state,
-      durationInTicks: Math.max(notesMidiLength, state.durationInTicks),
-      tracks: tracks,
+      tracks: state.tracks.map((track, idx) => {
+        if (idx !== this.trackIndex) return track;
+        return {
+          ...track,
+          // concat renvoie un nouveau tableau, c'est parfait
+          notes: track.notes.concat(this.notes.map((n) => ({ ...n, isSelected: false }))),
+        };
+      }),
+      durationInTicks: Math.max(getMidiLengthFromNotes(this.notes), state.durationInTicks),
     };
   }
 }
