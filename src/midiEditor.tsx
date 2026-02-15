@@ -5,6 +5,7 @@ import { Midi } from "@tonejs/midi";
 import { useHistoryState } from "@uidotdev/usehooks";
 import PianoRollEngine from "./pianoRollEngine";
 import { DeleteSelectedNotesCommand, SelectAllNotesCommand, type Command } from "./commands";
+import Stats from "stats.js";
 
 export default function MidiEditor({ initProject }: { initProject: Project }) {
   const [project, setProject] = useState<Project>(initProject);
@@ -72,27 +73,44 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
       setIsLoading(false);
     };
     loadMidi();
+    trackPerfs();
   }, []);
-
-  // useEffect(() => {
-  //   console.log("midi object changed", midiObject);
-  // }, [midiObject]);
 
   useEffect(() => {
     console.log(project);
   }, [project]);
 
+  const trackPerfs = () => {
+    const stats = new Stats();
+
+    stats.showPanel(0);
+
+    document.body.appendChild(stats.dom);
+
+    function animate() {
+      stats.begin();
+
+      stats.end();
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  };
+
   return (
-    <div
-      className="w-screen h-screen p-30 border flex justify-center items-center mx-auto my-auto"
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {midiObject && !isLoading ? (
-        <PianoRoll midiObject={midiObject} setMidiObject={setMidiObject} />
-      ) : (
-        <Spinner className="size-5" />
-      )}
-    </div>
+    <>
+      <div
+        className="w-screen h-screen p-30 border flex justify-center items-center mx-auto my-auto"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {midiObject && !isLoading ? (
+          <PianoRoll midiObject={midiObject} setMidiObject={setMidiObject} />
+        ) : (
+          <Spinner className="size-5" />
+        )}
+      </div>
+    </>
   );
 }
 

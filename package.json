@@ -20,6 +20,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "stats.js": "^0.17.0",
     "tailwind-merge": "^3.4.0",
     "tone": "^15.1.22"
   },
@@ -28,6 +29,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/stats.js": "^0.17.4",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",

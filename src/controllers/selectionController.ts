@@ -22,6 +22,7 @@ export class SelectionController {
     const { notesGrid } = this.deps;
 
     notesGrid.on("rightdown", (e) => {
+      console.log("right down");
       const pos = e.getLocalPosition(notesGrid);
       this.selectionOrigin = { x: pos.x, y: pos.y };
     });
