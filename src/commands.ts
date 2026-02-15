@@ -19,17 +19,17 @@ export class DeleteNoteCommand implements Command<MidiObject> {
   }
 }
 
-type MoveData = {
+type PositionData = {
   note: Note;
   ticks: number;
   midi: number;
 };
 
-export class MoveNotesCommand implements Command<MidiObject> {
-  constructor(private moves: MoveData[]) {}
+export class UpdateNotesPositionCommand implements Command<MidiObject> {
+  constructor(private positions: PositionData[]) {}
 
   execute(state: MidiObject): MidiObject {
-    const moveMap = new Map(this.moves.map((m) => [m.note, m]));
+    const moveMap = new Map(this.positions.map((m) => [m.note, m]));
     const updatedMidiObject: MidiObject = {
       ...state,
       tracks: state.tracks.map((track) => ({
@@ -47,6 +47,32 @@ export class MoveNotesCommand implements Command<MidiObject> {
     );
 
     return updatedMidiObject;
+  }
+}
+
+export class MoveNotesCommand implements Command<MidiObject> {
+  constructor(
+    private ticks: number,
+    private midi: number,
+  ) {}
+
+  execute(state: MidiObject): MidiObject {
+    return {
+      ...state,
+      tracks: state.tracks.map((track) => ({
+        ...track,
+        notes: track.notes.map((n) => {
+          if (n.isSelected) {
+            return {
+              ...n,
+              ticks: Math.max(0, n.ticks + this.ticks),
+              midi: Math.max(0, Math.min(127, n.midi + this.midi)),
+            };
+          }
+          return n;
+        }),
+      })),
+    };
   }
 }
 
@@ -83,7 +109,7 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
       ...state,
       tracks: state.tracks.map((track) => ({
         ...track,
-        // On crée de NOUVEAUX objets notes avec le spread {...n}
+
         notes: track.notes.map((n) => ({ ...n, isSelected: true })),
       })),
     };
@@ -113,13 +139,14 @@ export class AddNotesCommand implements Command<MidiObject> {
   ) {}
 
   execute(state: MidiObject): MidiObject {
+    state.tracks.map((t) => t.notes.map((n) => ({ ...n, isSelected: false })));
     return {
       ...state,
       tracks: state.tracks.map((track, idx) => {
         if (idx !== this.trackIndex) return track;
         return {
           ...track,
-          // concat renvoie un nouveau tableau, c'est parfait
+
           notes: track.notes.concat(this.notes),
         };
       }),

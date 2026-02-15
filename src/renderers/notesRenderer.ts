@@ -1,4 +1,10 @@
-import { DeleteNoteCommand, MoveNotesCommand, SelectNotesCommand, type Command } from "../commands";
+import {
+  DeleteNoteCommand,
+  MoveNotesCommand,
+  SelectNotesCommand,
+  UpdateNotesPositionCommand,
+  type Command,
+} from "../commands";
 import { colorFromValue } from "../lib/utils";
 import { Container, Graphics } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
@@ -85,7 +91,7 @@ export class NotesRenderer {
         midi: 127 - Math.round(g.y / rowHeight),
       }));
 
-      onCommand(new MoveNotesCommand(moved));
+      onCommand(new UpdateNotesPositionCommand(moved));
 
       dragInitialStates = null;
       dragStartMousePos = null;

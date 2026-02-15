@@ -1,4 +1,4 @@
-import { Application, Container, FederatedWheelEvent, Graphics } from "pixi.js";
+import { Application, Container, FederatedWheelEvent, Graphics, Rectangle } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
 import { type Command } from "./commands";
 import ViewportController from "./controllers/viewportController";
@@ -53,6 +53,7 @@ export default class PianoRollEngine {
     x: PIANO_KEYS_WIDTH,
     cullableChildren: true,
     eventMode: "dynamic",
+    hitArea: new Rectangle(0, 0, 100000, 100000),
   });
   private velocity_container: Container = new Container({
     x: PIANO_KEYS_WIDTH,
