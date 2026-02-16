@@ -2,8 +2,10 @@ import { Container, Graphics, FederatedPointerEvent } from "pixi.js";
 import type { Note, MidiObject } from "types/project";
 import { SelectNotesCommand, UnSelectAllNotesCommand, type Command } from "../commands";
 import type { NoteSprite } from "../pianoRollEngine";
+import type PianoRollEngine from "../pianoRollEngine";
 
 interface SelectionDeps {
+  engine: PianoRollEngine;
   notesGrid: Container;
   notesContainer: Container<NoteSprite>;
   selectSquare: Graphics;
@@ -59,6 +61,7 @@ export class SelectionController {
     const selected: Note[] = [];
 
     notesContainer.children.forEach((graphic) => {
+      if (!graphic.noteData.isInCurrentTrack) return;
       const noteRect = {
         x: graphic.x,
         y: graphic.y,
@@ -66,7 +69,11 @@ export class SelectionController {
         height: graphic.height,
       };
 
-      if (this.rectsIntersect(selectionRect, noteRect)) {
+      if (
+        this.rectsIntersect(selectionRect, noteRect) &&
+        graphic.noteData.isInCurrentTrack &&
+        !selected.includes(graphic.noteData)
+      ) {
         selected.push(graphic.noteData);
       }
     });
