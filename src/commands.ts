@@ -23,9 +23,10 @@ type PositionData = {
   note: Note;
   ticks: number;
   midi: number;
+  durationTicks: number;
 };
 
-export class UpdateNotesPositionCommand implements Command<MidiObject> {
+export class UpdateNotesCommand implements Command<MidiObject> {
   constructor(private positions: PositionData[]) {}
 
   execute(state: MidiObject): MidiObject {
@@ -36,7 +37,14 @@ export class UpdateNotesPositionCommand implements Command<MidiObject> {
         ...track,
         notes: track.notes.map((note) => {
           const update = moveMap.get(note);
-          return update ? { ...note, ticks: update.ticks, midi: update.midi } : note;
+          return update
+            ? {
+                ...note,
+                ticks: update.ticks,
+                midi: update.midi,
+                durationTicks: update.durationTicks,
+              }
+            : note;
         }),
       })),
     };

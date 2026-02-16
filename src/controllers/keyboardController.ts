@@ -29,6 +29,9 @@ export default class KeyboardController {
     ["ctrl+arrowup", () => this.moveNoteUp(12)],
     ["ctrl+arrowdown", () => this.moveNoteDown(12)],
     ["w", () => this.setTracklistToStart()],
+    ["backspace", () => this.deleteSelected()],
+    ["delete", () => this.deleteSelected()],
+    ["alt", () => this.setGrabbingCursor()],
   ]);
 
   constructor(private deps: KeyboardControllerDeps) {
@@ -42,7 +45,7 @@ export default class KeyboardController {
   private handleKeyboardEvents = (e: KeyboardEvent) => {
     const key = this.normalizeShortcut(e);
     const action = this.shortcutMap.get(key);
-
+    console.log(key);
     if (action) {
       e.preventDefault();
       action();
@@ -53,7 +56,7 @@ export default class KeyboardController {
     const parts: string[] = [];
 
     if (e.ctrlKey) parts.push("ctrl");
-    if (e.altKey) parts.push("alt");
+    if (e.altKey && e.key.toLowerCase() != "alt") parts.push("alt");
     if (e.shiftKey) parts.push("shift");
     if (e.metaKey) parts.push("meta");
 
@@ -64,6 +67,10 @@ export default class KeyboardController {
 
   private selectAll() {
     this.deps.onCommand(new SelectAllNotesCommand());
+  }
+
+  private deleteSelected() {
+    this.deps.onCommand(new DeleteSelectedNotesCommand());
   }
 
   private copy() {
@@ -125,5 +132,11 @@ export default class KeyboardController {
 
   private setTracklistToStart() {
     this.deps.parent.setTracklistPos(0);
+  }
+
+  private setGrabbingCursor() {
+    if (document.body.style.cursor !== "grabbing") {
+      document.body.style.cursor = "grab";
+    }
   }
 }

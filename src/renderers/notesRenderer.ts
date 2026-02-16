@@ -1,12 +1,11 @@
 import {
   DeleteNoteCommand,
-  MoveNotesCommand,
   SelectNotesCommand,
-  UpdateNotesPositionCommand,
+  UpdateNotesCommand,
   type Command,
 } from "../commands";
 import { colorFromValue } from "../lib/utils";
-import { Container, Graphics } from "pixi.js";
+import { Container, FederatedPointerEvent, Graphics } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
 
 export class NoteGraphic extends Graphics {
@@ -33,35 +32,40 @@ export class NotesRenderer {
 
   draw() {
     const { container, midiObject } = this.deps;
+    const rowHeight = this.getRowHeight();
+
+    const allNotes = midiObject().tracks.flatMap((track) =>
+      track.notes.map((note) => ({ note, channel: track.channel })),
+    );
+
+    allNotes.sort((a, b) => {
+      if (a.note.isSelected === b.note.isSelected) return 0;
+      return a.note.isSelected ? 1 : -1;
+    });
 
     container.removeChildren().forEach((child) => child.destroy());
 
-    const rowHeight = this.getRowHeight();
+    allNotes.forEach(({ note, channel }) => {
+      const graphic = new NoteGraphic();
 
-    midiObject().tracks.forEach((track) => {
-      track.notes.forEach((note) => {
-        const graphic = new NoteGraphic();
+      graphic
+        .rect(0, 0, note.durationTicks, rowHeight)
+        .stroke({ color: "#000000", pixelLine: true });
 
-        graphic
-          .rect(0, 0, note.durationTicks, rowHeight)
-          .stroke({ color: "#000000", pixelLine: true });
+      if (note.isSelected) {
+        graphic.fill({ color: "#ffffff" });
+        graphic.tint = "#ff0000";
+      } else {
+        graphic.fill(colorFromValue(channel));
+      }
 
-        graphic.fill(colorFromValue(track.channel));
+      graphic.x = note.ticks;
+      graphic.y = (127 - note.midi) * rowHeight;
+      graphic.noteData = note;
+      graphic.eventMode = "static";
 
-        graphic.x = note.ticks;
-        graphic.y = (127 - note.midi) * rowHeight;
-
-        graphic.eventMode = "static";
-        graphic.cursor = "pointer";
-        graphic.noteData = note;
-
-        if (note.isSelected) {
-          graphic.tint = "#ff0000";
-        }
-
-        this.attachEvents(graphic);
-        container.addChild(graphic);
-      });
+      this.attachEvents(graphic);
+      container.addChild(graphic);
     });
   }
 
@@ -72,53 +76,91 @@ export class NotesRenderer {
   private attachEvents(graphic: NoteGraphic) {
     const { notesGrid, onCommand } = this.deps;
 
-    let dragInitialStates: Map<NoteGraphic, { x: number; y: number }> | null = null;
-    let dragStartMousePos: { x: number; y: number } | null = null;
+    const state = {
+      initialStates: null as Map<NoteGraphic, { x: number; y: number; duration: number }> | null,
+      startMousePos: null as { x: number; y: number } | null,
+      behavior: null as "leftResize" | "rightResize" | "move" | null,
+    };
+
+    const HANDLE_SIZE = 15;
+    const MIN_DURATION = 10;
+
+    const getMouseX = (e: FederatedPointerEvent) => notesGrid.toLocal(e.global).x;
+
+    const getZone = (e: FederatedPointerEvent): typeof state.behavior => {
+      const x = getMouseX(e);
+      if (x > graphic.x + graphic.noteData.durationTicks - HANDLE_SIZE) return "rightResize";
+      if (x < graphic.x + HANDLE_SIZE) return "leftResize";
+      return "move";
+    };
+
+    const updateCursor = (behavior: typeof state.behavior) => {
+      const cursorMap = {
+        leftResize: "w-resize",
+        rightResize: "e-resize",
+        move: "move",
+      };
+      const newCursor = behavior ? cursorMap[behavior] : "pointer";
+      graphic.cursor = newCursor;
+      if (state.behavior) document.body.style.cursor = newCursor;
+    };
+
+    const handleMove = (dx: number, dy: number) => {
+      const rowHeight = this.getRowHeight();
+
+      let offsetDx = dx;
+      state.initialStates?.forEach((init) => {
+        if (init.x + offsetDx < 0) offsetDx = -init.x;
+      });
+
+      state.initialStates?.forEach((init, g) => {
+        g.x = init.x + offsetDx;
+        const rawY = init.y + dy;
+        g.y = Math.round(rawY / rowHeight) * rowHeight;
+      });
+    };
+
+    const handleResize = (dx: number) => {
+      const rowHeight = this.getRowHeight();
+      state.initialStates?.forEach((init, g) => {
+        let newDuration = init.duration;
+        if (state.behavior === "rightResize") {
+          newDuration = Math.max(MIN_DURATION, init.duration + dx);
+        } else {
+          newDuration = Math.max(MIN_DURATION, init.duration - dx);
+          g.x = init.x + (init.duration - newDuration);
+        }
+
+        (g as any).tempDuration = newDuration;
+        g.clear()
+          .rect(0, 0, newDuration, rowHeight)
+          .fill(g.noteData.isSelected ? "#ffffff" : colorFromValue(0))
+          .stroke({ color: "#000000", pixelLine: true });
+      });
+    };
+
+    const finalize = () => {
+      if (!state.initialStates) return;
+
+      const rowHeight = this.getRowHeight();
+      const updates = Array.from(state.initialStates.entries()).map(([g]) => ({
+        note: g.noteData,
+        ticks: g.x,
+        midi: 127 - Math.round(g.y / rowHeight),
+        durationTicks: (g as any).tempDuration || g.noteData.durationTicks,
+      }));
+
+      onCommand(new UpdateNotesCommand(updates));
+
+      state.initialStates = null;
+      state.startMousePos = null;
+      state.behavior = null;
+      document.body.style.cursor = "default";
+    };
 
     graphic.on("rightclick", (e) => {
       e.stopPropagation();
       onCommand(new DeleteNoteCommand(graphic.noteData));
-    });
-
-    const finalizeDrag = () => {
-      if (!dragInitialStates) return;
-
-      const rowHeight = this.getRowHeight();
-
-      const moved = Array.from(dragInitialStates.entries()).map(([g, initial]) => ({
-        note: g.noteData,
-        ticks: g.x,
-        midi: 127 - Math.round(g.y / rowHeight),
-      }));
-
-      onCommand(new UpdateNotesPositionCommand(moved));
-
-      dragInitialStates = null;
-      dragStartMousePos = null;
-    };
-
-    graphic.on("pointerup", finalizeDrag);
-    graphic.on("pointerupoutside", finalizeDrag);
-
-    graphic.on("globalpointermove", (e) => {
-      if (!dragInitialStates || !dragStartMousePos) return;
-
-      const rowHeight = this.getRowHeight();
-      const currentMousePos = notesGrid.toLocal(e.global);
-
-      let dx = currentMousePos.x - dragStartMousePos.x;
-      const dy = currentMousePos.y - dragStartMousePos.y;
-
-      dragInitialStates.forEach((initial) => {
-        if (initial.x + dx < 0) dx = -initial.x;
-      });
-
-      dragInitialStates.forEach((initial, g) => {
-        g.x = initial.x + dx;
-
-        const rawY = initial.y + dy;
-        g.y = Math.round(rawY / rowHeight) * rowHeight;
-      });
     });
 
     graphic.on("pointerdown", (e) => {
@@ -127,20 +169,46 @@ export class NotesRenderer {
 
       if (!graphic.noteData.isSelected) {
         onCommand(new SelectNotesCommand([graphic.noteData]));
+        return;
       }
 
-      dragStartMousePos = notesGrid.toLocal(e.global);
-
-      dragInitialStates = new Map();
+      state.behavior = getZone(e);
+      state.startMousePos = notesGrid.toLocal(e.global);
+      state.initialStates = new Map();
 
       this.deps.container.children.forEach((child) => {
         if (child.noteData.isSelected) {
-          dragInitialStates!.set(child, {
+          state.initialStates!.set(child, {
             x: child.x,
             y: child.y,
+            duration: child.noteData.durationTicks,
           });
         }
       });
+      updateCursor(state.behavior);
+    });
+
+    graphic.on("globalpointermove", (e) => {
+      if (!state.initialStates || !state.startMousePos) {
+        updateCursor(getZone(e));
+        return;
+      }
+
+      const currentPos = notesGrid.toLocal(e.global);
+      const dx = currentPos.x - state.startMousePos.x;
+      const dy = currentPos.y - state.startMousePos.y;
+
+      if (state.behavior === "move") handleMove(dx, dy);
+      else handleResize(dx);
+    });
+
+    graphic.on("pointerup", finalize);
+    graphic.on("pointerupoutside", finalize);
+    graphic.on("pointerout", () => {
+      if (!state.behavior) {
+        graphic.cursor = "pointer";
+        document.body.style.cursor = "default";
+      }
     });
   }
 }

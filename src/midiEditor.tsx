@@ -38,13 +38,6 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
           e.preventDefault();
           redo();
         }
-      } else if (e.altKey) {
-      } else if (e.shiftKey) {
-      } else {
-        if (key === "backspace" || key === "delete") {
-          e.preventDefault();
-          setMidiObject(new DeleteSelectedNotesCommand().execute(currentMidi));
-        }
       }
     };
     window.addEventListener("keydown", listenKeyDown);

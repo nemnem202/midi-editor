@@ -181,6 +181,7 @@ export default class PianoRollEngine {
     );
     this.notes_grid_container.on("pointerdown", (e) => {
       if (e.button === 0 && e.altKey) {
+        document.body.style.cursor = "grabbing";
         this.panController.updateLastDragPos(e);
       } else if (e.button === 0) {
         this.selectionController.unselectAll();
@@ -196,6 +197,7 @@ export default class PianoRollEngine {
     });
 
     this.notes_grid_container.on("pointerup", (e) => {
+      document.body.style.cursor = "default";
       this.selectionController.finalize(e);
       this.panController.releaseLastDragPos();
     });
