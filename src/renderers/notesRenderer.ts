@@ -46,7 +46,7 @@ export class NotesRenderer {
 
     allNotes.sort((a, b) => {
       if (a.note.isSelected === b.note.isSelected && !a.note.isInCurrentTrack) return 0;
-      return a.note.isSelected || a.note.isInCurrentTrack ? 1 : -1;
+      return a.note.isInCurrentTrack ? 1 : -1;
     });
 
     container.removeChildren().forEach((child) => child.destroy());
@@ -64,7 +64,7 @@ export class NotesRenderer {
       sprite.y = (127 - note.midi) * rowHeight;
       sprite.noteData = note;
       sprite.eventMode = "static";
-
+      sprite.alpha = 1;
       if (!note.isInCurrentTrack) {
         sprite.alpha = 0.3;
         sprite.eventMode = "none";
@@ -104,8 +104,10 @@ export class NotesRenderer {
 
     const getZone = (e: FederatedPointerEvent): typeof state.behavior => {
       const x = getMouseX(e);
-      if (x > graphic.x + graphic.noteData.durationTicks - HANDLE_SIZE) return "rightResize";
-      if (x < graphic.x + HANDLE_SIZE) return "leftResize";
+      const isLargEnought = this.deps.notesGrid.scale.x * graphic.noteData.durationTicks > 60;
+      if (x > graphic.x + graphic.noteData.durationTicks - HANDLE_SIZE && isLargEnought)
+        return "rightResize";
+      if (x < graphic.x + HANDLE_SIZE && isLargEnought) return "leftResize";
       return "move";
     };
 
@@ -239,6 +241,7 @@ export class NotesRenderer {
 
     graphic.on("pointerup", finalize);
     graphic.on("pointerupoutside", finalize);
+
     graphic.on("pointerout", () => {
       if (!state.behavior) {
         graphic.cursor = "pointer";
