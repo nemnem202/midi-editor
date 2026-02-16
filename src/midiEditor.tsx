@@ -56,9 +56,13 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
       };
       const midiObject = {
         ...initialMidiObject,
-        tracks: initialMidiObject.tracks.map((track) => ({
+        tracks: initialMidiObject.tracks.map((track, index) => ({
           ...track,
-          notes: track.notes.map((n) => ({ ...n, isSelected: false })),
+          notes: track.notes.map((n) => ({
+            ...n,
+            isSelected: false,
+            isInCurrentTrack: index === 0,
+          })),
         })),
       };
       setMidiObject({ ...midiObject, durationInTicks: getMidiLength(midiObject) + 200 });

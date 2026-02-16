@@ -19,15 +19,16 @@ export class DeleteNoteCommand implements Command<MidiObject> {
   }
 }
 
-type PositionData = {
+export type NoteUpdateData = {
   note: Note;
-  ticks: number;
-  midi: number;
-  durationTicks: number;
+  ticks?: number;
+  midi?: number;
+  durationTicks?: number;
+  velocity?: number;
 };
 
 export class UpdateNotesCommand implements Command<MidiObject> {
-  constructor(private positions: PositionData[]) {}
+  constructor(private positions: NoteUpdateData[]) {}
 
   execute(state: MidiObject): MidiObject {
     return {
@@ -44,9 +45,10 @@ export class UpdateNotesCommand implements Command<MidiObject> {
           if (update) {
             return {
               ...note,
-              ticks: update.ticks,
-              midi: update.midi,
-              durationTicks: update.durationTicks,
+              ticks: update.ticks ?? note.ticks,
+              midi: update.midi ?? note.midi,
+              durationTicks: update.durationTicks ?? note.durationTicks,
+              velocity: update.velocity ?? note.velocity,
             };
           }
           return note;
@@ -118,7 +120,7 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
       tracks: state.tracks.map((track) => ({
         ...track,
 
-        notes: track.notes.map((n) => ({ ...n, isSelected: true })),
+        notes: track.notes.map((n) => ({ ...n, isSelected: n.isInCurrentTrack })),
       })),
     };
   }
