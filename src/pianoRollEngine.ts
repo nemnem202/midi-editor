@@ -60,6 +60,7 @@ export default class PianoRollEngine {
   });
   private velocity_notes_container: Container<NoteSprite> = new Container<NoteSprite>({
     eventMode: "dynamic",
+    hitArea: new Rectangle(0, 0, 100000, VELOCITY_ZONE_HEIGHT),
   });
   private notes_grid_container: Container = new Container({
     x: PIANO_KEYS_WIDTH,
@@ -71,7 +72,7 @@ export default class PianoRollEngine {
     x: PIANO_KEYS_WIDTH,
     height: VELOCITY_ZONE_HEIGHT - VELOCITY_ZONE_GAP,
     cullableChildren: true,
-    eventMode: "dynamic",
+    eventMode: "static",
   });
 
   private velocity_mask: Graphics = new Graphics({ eventMode: "passive" });
@@ -385,6 +386,7 @@ export default class PianoRollEngine {
       onAfterTransform: () => {
         this.drawAllGrids();
         this.layoutManager.updateHitbox();
+        this.velocityRenderer.updateWidth();
       },
     });
   };

@@ -14,7 +14,7 @@ interface VelocityRendererDeps {
 
 export class VelocityRenderer {
   private deps: VelocityRendererDeps;
-
+  private handleWidth: number = 10;
   constructor(deps: VelocityRendererDeps) {
     this.deps = deps;
   }
@@ -26,11 +26,11 @@ export class VelocityRenderer {
 
     midiObject().tracks[engine.project.config.displayedTrackIndex].notes.forEach((note) => {
       const sprite = new NoteSprite(Texture.WHITE);
-
+      sprite.eventMode = "static";
       sprite.x = note.ticks;
       sprite.y = velocityContainer.height - velocityContainer.height * note.velocity;
 
-      sprite.width = 1 / velocityContainer.scale._x;
+      sprite.width = 10 / velocityContainer.scale._x;
       sprite.height = velocityContainer.height * note.velocity;
 
       sprite.tint = colorFromValue(note.velocity * 10);
@@ -46,28 +46,30 @@ export class VelocityRenderer {
   }
 
   updateWidth() {
+    console.log(this.handleWidth, this.deps.velocityContainer.scale._x);
+    this.handleWidth = 10 / this.deps.velocityContainer.scale._x;
+    console.log(this.handleWidth);
     this.deps.container.children.forEach((sprite) => {
-      sprite.width = 1 / this.deps.velocityContainer.scale._x;
+      sprite.width = 10 / this.deps.velocityContainer.scale._x;
     });
   }
 
   private attachControls() {
     const { container, triggerMidiCommand, velocityContainer } = this.deps;
-    container.hitArea = new Rectangle(0, 0, velocityContainer.width, velocityContainer.height);
 
     let startDragPos: { x: number; y: number } | null = null;
 
     const handleMouseUp = () => {
       startDragPos = null;
+
       const notesData: NoteUpdateData[] = container.children.map((e) => ({
         note: e.noteData,
-        velocity: 1 - e.y / velocityContainer.height,
+        velocity: Math.max(0, Math.min(1 - e.y / velocityContainer.height, 1)),
       }));
 
       triggerMidiCommand(new UpdateNotesCommand(notesData));
     };
     const handleMouseDown = (e: FederatedPointerEvent) => {
-      console.log("oeoe");
       const pos = container.toLocal(e.global);
       startDragPos = { x: pos.x, y: pos.y };
     };
@@ -79,10 +81,11 @@ export class VelocityRenderer {
       container.children.forEach((c) => {
         if (!startDragPos) return;
         if (
-          (c.x > startDragPos.x && c.x < currentPosition.x) ||
-          (c.x < startDragPos.x && c.x > currentPosition.x)
+          c.x + this.handleWidth > currentPosition.x &&
+          c.x - this.handleWidth < currentPosition.x
         ) {
           c.y = currentPosition.y;
+          c.height = container.height - currentPosition.y;
         }
       });
     };
