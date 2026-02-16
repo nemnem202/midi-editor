@@ -28,21 +28,22 @@ const VELOCITY_ZONE_GAP = 20;
 const TOTAL_NOTES = 128;
 const CORNER_RADIUS = 10;
 
-export class NoteGraphic extends Graphics {
-  noteData: Note = {
-    duration: 0,
-    durationTicks: 0,
-    isSelected: false,
-    midi: 0,
-    name: "",
-    ticks: 0,
-    time: 0,
-    velocity: 0,
-  };
-}
+// export class NoteGraphic extends Graphics {
+//   noteData: Note = {
+//     duration: 0,
+//     durationTicks: 0,
+//     isSelected: false,
+//     midi: 0,
+//     name: "",
+//     ticks: 0,
+//     time: 0,
+//     velocity: 0,
+//   };
+// }
 
 export class NoteSprite extends Sprite {
   noteData: Note = {
+    isInCurrentTrack: true,
     duration: 0,
     durationTicks: 0,
     isSelected: false,
@@ -229,6 +230,7 @@ export default class PianoRollEngine {
       const rowHeight = this.app.screen.height / TOTAL_NOTES;
       const pos = this.notes_grid_container.toLocal(e.global);
       const newNote: Note = {
+        isInCurrentTrack: true,
         duration: 2000,
         durationTicks: 200,
         isSelected: true,

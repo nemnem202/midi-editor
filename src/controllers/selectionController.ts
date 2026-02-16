@@ -59,6 +59,7 @@ export class SelectionController {
     const selected: Note[] = [];
 
     notesContainer.children.forEach((graphic) => {
+      if (!graphic.noteData.isInCurrentTrack) return;
       const noteRect = {
         x: graphic.x,
         y: graphic.y,

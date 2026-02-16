@@ -38,17 +38,20 @@ export class NotesRenderer {
     const rowHeight = this.getRowHeight();
 
     const allNotes = midiObject().tracks.flatMap((track, index) =>
-      track.notes.map((note) => ({ note, channel: track.channel, trackIndex: index })),
+      track.notes.map((note) => ({
+        note: { ...note, isInCurrentTrack: index === engine.project.config.displayedTrackIndex },
+        channel: track.channel,
+      })),
     );
 
     allNotes.sort((a, b) => {
-      if (a.note.isSelected === b.note.isSelected) return 0;
-      return a.note.isSelected ? 1 : -1;
+      if (a.note.isSelected === b.note.isSelected && !a.note.isInCurrentTrack) return 0;
+      return a.note.isSelected || a.note.isInCurrentTrack ? 1 : -1;
     });
 
     container.removeChildren().forEach((child) => child.destroy());
 
-    allNotes.forEach(({ note, channel, trackIndex }) => {
+    allNotes.forEach(({ note, channel }) => {
       const sprite = new NoteSprite({ texture: Texture.WHITE });
 
       // sprite
@@ -62,8 +65,10 @@ export class NotesRenderer {
       sprite.noteData = note;
       sprite.eventMode = "static";
 
-      if (trackIndex !== engine.project.config.displayedTrackIndex) {
-        sprite.tint = grayFromScale(trackIndex * 50 + 3000);
+      if (!note.isInCurrentTrack) {
+        sprite.alpha = 0.3;
+        sprite.eventMode = "none";
+        sprite.tint = colorFromValue(channel);
         return container.addChild(sprite);
       }
 

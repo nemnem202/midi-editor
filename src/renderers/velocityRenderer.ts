@@ -1,9 +1,10 @@
 import { Container, Texture } from "pixi.js";
 import type { MidiObject } from "types/project";
 import { colorFromValue } from "../lib/utils";
-import PianoRollEngine, { NoteGraphic, NoteSprite } from "../pianoRollEngine";
+import PianoRollEngine, { NoteSprite } from "../pianoRollEngine";
 
 interface VelocityRendererDeps {
+  engine: PianoRollEngine;
   container: Container<NoteSprite>;
   velocityContainer: Container;
   midiObject: () => MidiObject;
@@ -17,7 +18,7 @@ export class VelocityRenderer {
   }
 
   draw() {
-    const { container, velocityContainer, midiObject } = this.deps;
+    const { container, velocityContainer, midiObject, engine } = this.deps;
 
     container.removeChildren().forEach((child) => child.destroy());
 
