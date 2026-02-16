@@ -25,7 +25,7 @@ export default class TracklistRenderer {
     track.x = this.tracklistPos;
   }
 
-  updatePosition(e: FederatedPointerEvent | number) {
+  updatePositionFromUser(e: FederatedPointerEvent | number) {
     if (e instanceof FederatedPointerEvent) {
       this.tracklistPos = e.getLocalPosition(this.deps.container).x;
     } else {
@@ -35,7 +35,13 @@ export default class TracklistRenderer {
       this.deps.engine.midiObject.header.ppq,
       [1, 1],
       this.tracklistPos,
+      this.deps.engine.project.config.magnetism,
     );
+  }
+
+  updatePositionFromPlaying(value: number) {
+    this.tracklistPos = value;
+    this.deps.track.x = this.tracklistPos;
   }
   get tracklistPosition() {
     return this.tracklistPos;

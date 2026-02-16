@@ -13,11 +13,18 @@ const DEFAULT_PROJECT: Project = {
     lastName: "Van Bethoven",
   },
   title: "Fly me to the moon",
-  bpm: 120,
-  signature: [4, 4],
   description: "A popular jazz standart",
   creation: new Date(Date.now()),
   lasModified: new Date(Date.now()),
-  midiFileUrl: "assets/midi/FlyMeToTheMoon.mid",
+  midiFileUrl: "assets/midi/Falling20in20love.mid",
+  config: {
+    bpm: 120,
+    currentTracklistTick: 0,
+    displayedTrackIndex: 0,
+    gridSubdivisions: [1, 4],
+    isPlaying: false,
+    magnetism: true,
+    signature: [4, 4],
+  },
 };
 export default DEFAULT_PROJECT;

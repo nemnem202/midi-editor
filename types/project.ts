@@ -20,9 +20,18 @@ export type Project = {
   composer: People;
   creation: Date;
   lasModified: Date;
-  bpm: number;
-  signature: Signature;
   midiFileUrl: string;
+  config: Config;
+};
+
+export type Config = {
+  gridSubdivisions: [number, number];
+  currentTracklistTick: number;
+  displayedTrackIndex: number;
+  signature: Signature;
+  magnetism: boolean;
+  isPlaying: boolean;
+  bpm: number;
 };
 
 export interface Note extends NoteJSON {

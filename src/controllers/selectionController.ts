@@ -7,7 +7,7 @@ interface SelectionDeps {
   notesGrid: Container;
   notesContainer: Container<NoteGraphic>;
   selectSquare: Graphics;
-  onCommand: (command: Command<MidiObject>) => void;
+  triggerMidiCommand: (command: Command<MidiObject>) => void;
 }
 
 export class SelectionController {
@@ -45,7 +45,7 @@ export class SelectionController {
   finalize(e: FederatedPointerEvent) {
     if (!this.selectionOrigin) return;
 
-    const { notesGrid, notesContainer, selectSquare, onCommand } = this.deps;
+    const { notesGrid, notesContainer, selectSquare, triggerMidiCommand } = this.deps;
 
     const pos = e.getLocalPosition(notesGrid);
 
@@ -71,14 +71,14 @@ export class SelectionController {
       }
     });
 
-    onCommand(new SelectNotesCommand(selected));
+    triggerMidiCommand(new SelectNotesCommand(selected));
 
     selectSquare.clear();
     this.selectionOrigin = null;
   }
 
   unselectAll() {
-    this.deps.onCommand(new UnSelectAllNotesCommand([]));
+    this.deps.triggerMidiCommand(new UnSelectAllNotesCommand([]));
   }
 
   private rectsIntersect(a: any, b: any) {

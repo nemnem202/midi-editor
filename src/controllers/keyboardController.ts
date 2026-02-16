@@ -4,14 +4,16 @@ import {
   DeleteSelectedNotesCommand,
   MoveNotesCommand,
   SelectAllNotesCommand,
+  ToggleMagnetismCommand,
   type Command,
 } from "../commands";
-import type { MidiObject, Note } from "types/project";
+import type { MidiObject, Note, Project } from "types/project";
 import type PianoRollEngine from "@/pianoRollEngine";
 
 interface KeyboardControllerDeps {
   parent: PianoRollEngine;
-  onCommand: (command: Command<MidiObject>) => void;
+  triggerMidiCommand: (command: Command<MidiObject>) => void;
+  triggerProjectCommand: (Command: Command<Project>) => void;
 }
 
 type ShortcutMap = Map<string, () => void>;
@@ -31,6 +33,7 @@ export default class KeyboardController {
     ["w", () => this.setTracklistToStart()],
     ["backspace", () => this.deleteSelected()],
     ["delete", () => this.deleteSelected()],
+    ["ctrl+m", () => this.toggleMagnetism()],
   ]);
 
   constructor(private deps: KeyboardControllerDeps) {
@@ -65,11 +68,11 @@ export default class KeyboardController {
   }
 
   private selectAll() {
-    this.deps.onCommand(new SelectAllNotesCommand());
+    this.deps.triggerMidiCommand(new SelectAllNotesCommand());
   }
 
   private deleteSelected() {
-    this.deps.onCommand(new DeleteSelectedNotesCommand());
+    this.deps.triggerMidiCommand(new DeleteSelectedNotesCommand());
   }
 
   private copy() {
@@ -94,13 +97,12 @@ export default class KeyboardController {
       isSelected: true,
       ticks: note.ticks + this.deps.parent.tracklistPos,
     }));
-    console.log("pasted", newNotes);
-    this.deps.onCommand(new AddNotesCommand(newNotes, 0));
+    this.deps.triggerMidiCommand(new AddNotesCommand(newNotes, 0));
   }
 
   private cut() {
     this.copy();
-    this.deps.onCommand(new DeleteSelectedNotesCommand());
+    this.deps.triggerMidiCommand(new DeleteSelectedNotesCommand());
   }
 
   private moveNoteUp(of: number = 1) {
@@ -112,7 +114,7 @@ export default class KeyboardController {
     ) {
       return;
     } else {
-      this.deps.onCommand(new MoveNotesCommand(0, of));
+      this.deps.triggerMidiCommand(new MoveNotesCommand(0, of));
     }
   }
 
@@ -125,11 +127,15 @@ export default class KeyboardController {
     ) {
       return;
     } else {
-      this.deps.onCommand(new MoveNotesCommand(0, -of));
+      this.deps.triggerMidiCommand(new MoveNotesCommand(0, -of));
     }
   }
 
   private setTracklistToStart() {
     this.deps.parent.setTracklistPos(0);
+  }
+
+  private toggleMagnetism() {
+    this.deps.triggerProjectCommand(new ToggleMagnetismCommand());
   }
 }

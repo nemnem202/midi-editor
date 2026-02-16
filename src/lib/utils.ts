@@ -83,7 +83,11 @@ export function getNearestSubdivisionRoundedTick(
   ppq: number,
   resolution: [number, number],
   tick: number,
-) {
+  magnetism = true,
+): number {
+  if (!magnetism) {
+    return tick;
+  }
   const interval = getSubdivisionTickInterval(ppq, resolution);
   return Math.round(tick / interval) * interval;
 }

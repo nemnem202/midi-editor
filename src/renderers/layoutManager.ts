@@ -1,7 +1,9 @@
+import type PianoRollEngine from "@/pianoRollEngine";
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface LayoutDeps {
+  engine: PianoRollEngine;
   app: Application;
   rootDiv: HTMLDivElement;
   notesGrid: Container;
@@ -35,7 +37,7 @@ export class LayoutManager {
   }
 
   private resizeOnInit() {
-    const { app, notesGrid, velocityContainer, midiObject, constants } = this.deps;
+    const { app, notesGrid, velocityContainer, midiObject, constants, engine } = this.deps;
 
     const availableWidth = app.screen.width - constants.PIANO_KEYS_WIDTH;
 

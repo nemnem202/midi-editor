@@ -1,10 +1,11 @@
+import type PianoRollEngine from "@/pianoRollEngine";
 import {
   DeleteNoteCommand,
   SelectNotesCommand,
   UpdateNotesCommand,
   type Command,
 } from "../commands";
-import { colorFromValue, getNearestSubdivisionRoundedTick } from "../lib/utils";
+import { colorFromValue, getNearestSubdivisionRoundedTick, grayFromScale } from "../lib/utils";
 import { Container, FederatedPointerEvent, Graphics } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
 
@@ -13,11 +14,12 @@ export class NoteGraphic extends Graphics {
 }
 
 interface NotesRendererDeps {
+  engine: PianoRollEngine;
   container: Container<NoteGraphic>;
   notesGrid: Container;
   appScreen: { width: number; height: number };
   midiObject: () => MidiObject;
-  onCommand: (command: Command<MidiObject>) => void;
+  triggerMidiCommand: (command: Command<MidiObject>) => void;
   constants: {
     TOTAL_NOTES: number;
   };
@@ -31,11 +33,11 @@ export class NotesRenderer {
   }
 
   draw() {
-    const { container, midiObject } = this.deps;
+    const { container, midiObject, engine } = this.deps;
     const rowHeight = this.getRowHeight();
 
-    const allNotes = midiObject().tracks.flatMap((track) =>
-      track.notes.map((note) => ({ note, channel: track.channel })),
+    const allNotes = midiObject().tracks.flatMap((track, index) =>
+      track.notes.map((note) => ({ note, channel: track.channel, trackIndex: index })),
     );
 
     allNotes.sort((a, b) => {
@@ -45,12 +47,22 @@ export class NotesRenderer {
 
     container.removeChildren().forEach((child) => child.destroy());
 
-    allNotes.forEach(({ note, channel }) => {
+    allNotes.forEach(({ note, channel, trackIndex }) => {
       const graphic = new NoteGraphic();
 
       graphic
         .rect(0, 0, note.durationTicks, rowHeight)
         .stroke({ color: "#000000", pixelLine: true });
+
+      graphic.x = note.ticks;
+      graphic.y = (127 - note.midi) * rowHeight;
+      graphic.noteData = note;
+      graphic.eventMode = "static";
+
+      if (trackIndex !== engine.project.config.displayedTrackIndex) {
+        graphic.fill(grayFromScale(trackIndex * 50 + 3000));
+        return container.addChild(graphic);
+      }
 
       if (note.isSelected) {
         graphic.fill({ color: "#ffffff" });
@@ -58,11 +70,6 @@ export class NotesRenderer {
       } else {
         graphic.fill(colorFromValue(channel));
       }
-
-      graphic.x = note.ticks;
-      graphic.y = (127 - note.midi) * rowHeight;
-      graphic.noteData = note;
-      graphic.eventMode = "static";
 
       this.attachEvents(graphic);
       container.addChild(graphic);
@@ -74,7 +81,7 @@ export class NotesRenderer {
   }
 
   private attachEvents(graphic: NoteGraphic) {
-    const { notesGrid, onCommand } = this.deps;
+    const { notesGrid, triggerMidiCommand } = this.deps;
 
     const state = {
       initialStates: null as Map<NoteGraphic, { x: number; y: number; duration: number }> | null,
@@ -118,6 +125,7 @@ export class NotesRenderer {
           this.deps.midiObject().header.ppq,
           [1, 1],
           init.x + offsetDx,
+          this.deps.engine.project.config.magnetism,
         );
         const rawY = init.y + dy;
         g.y = Math.round(rawY / rowHeight) * rowHeight;
@@ -133,17 +141,20 @@ export class NotesRenderer {
             this.deps.midiObject().header.ppq,
             [1, 1],
             Math.max(MIN_DURATION, init.duration + dx),
+            this.deps.engine.project.config.magnetism,
           );
         } else {
           newDuration = getNearestSubdivisionRoundedTick(
             this.deps.midiObject().header.ppq,
             [1, 1],
             Math.max(MIN_DURATION, init.duration - dx),
+            this.deps.engine.project.config.magnetism,
           );
           g.x = getNearestSubdivisionRoundedTick(
             this.deps.midiObject().header.ppq,
             [1, 1],
             init.x + (init.duration - newDuration),
+            this.deps.engine.project.config.magnetism,
           );
         }
 
@@ -166,7 +177,7 @@ export class NotesRenderer {
         durationTicks: (g as any).tempDuration || g.noteData.durationTicks,
       }));
 
-      onCommand(new UpdateNotesCommand(updates));
+      triggerMidiCommand(new UpdateNotesCommand(updates));
 
       state.initialStates = null;
       state.startMousePos = null;
@@ -176,7 +187,7 @@ export class NotesRenderer {
 
     graphic.on("rightclick", (e) => {
       e.stopPropagation();
-      onCommand(new DeleteNoteCommand(graphic.noteData));
+      triggerMidiCommand(new DeleteNoteCommand(graphic.noteData));
     });
 
     graphic.on("pointerdown", (e) => {
@@ -184,7 +195,7 @@ export class NotesRenderer {
       e.stopPropagation();
 
       if (!graphic.noteData.isSelected) {
-        onCommand(new SelectNotesCommand([graphic.noteData]));
+        triggerMidiCommand(new SelectNotesCommand([graphic.noteData]));
         return;
       }
 

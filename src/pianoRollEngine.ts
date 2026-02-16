@@ -6,7 +6,7 @@ import {
   Graphics,
   Rectangle,
 } from "pixi.js";
-import type { MidiObject, Note } from "types/project";
+import type { MidiObject, Note, Project } from "types/project";
 import { AddNotesCommand, type Command } from "./commands";
 import ViewportController from "./controllers/viewportController";
 import { GridRenderer } from "./renderers/gridRenderer";
@@ -43,8 +43,10 @@ class NoteGraphic extends Graphics {
 export default class PianoRollEngine {
   private is_ready = false;
 
-  private midi_object: MidiObject;
-  private onCommand: (command: Command<MidiObject>) => void;
+  private engineMidiObject: MidiObject;
+  private engineProject: Project;
+  private triggerMidiCommand: (command: Command<MidiObject>) => void;
+  private triggerProjectCommand: (command: Command<Project>) => void;
 
   private root_div: HTMLDivElement;
   private app: Application = new Application();
@@ -94,17 +96,26 @@ export default class PianoRollEngine {
 
   constructor(
     root_div: HTMLDivElement,
-    midi_object: MidiObject,
-    onCommand: (command: Command<MidiObject>) => void,
+    midiObject: MidiObject,
+    triggerMidiCommand: (command: Command<MidiObject>) => void,
+    project: Project,
+    triggerProjectCommand: (command: Command<Project>) => void,
   ) {
     this.root_div = root_div;
-    this.midi_object = midi_object;
-    this.onCommand = onCommand;
+    this.engineMidiObject = midiObject;
+    this.engineProject = project;
+    this.triggerMidiCommand = triggerMidiCommand;
+    this.triggerProjectCommand = triggerProjectCommand;
   }
 
   get midiObject(): MidiObject {
-    return this.midi_object;
+    return this.engineMidiObject;
   }
+
+  get project(): Project {
+    return this.engineProject;
+  }
+
   get tracklistPos(): number {
     return this.tracklistRenderer.tracklistPosition;
   }
@@ -141,24 +152,35 @@ export default class PianoRollEngine {
   };
 
   setTracklistPos(pos: number) {
-    this.tracklistRenderer.updatePosition(pos);
+    this.tracklistRenderer.updatePositionFromUser(pos);
   }
 
-  public destroy() {
+  destroy() {
     if (this.app) {
       this.app.renderer.off("resize");
       this.app.destroy(true, { children: true });
       this.keyboardController.destroy();
     }
   }
-  public updateMidiData(newMidi: MidiObject) {
-    this.midi_object = newMidi;
+  updateMidiData(newMidi: MidiObject) {
+    this.engineMidiObject = newMidi;
     if (this.is_ready) {
       this.viewportController.updateMidiSize();
       this.drawAllNotes();
       this.drawAllGrids();
     }
   }
+  updateProjectData(newProject: Project) {
+    const newConfig = newProject.config;
+    const prevConfig = { ...this.project.config };
+    this.engineProject = newProject;
+    if (newConfig.currentTracklistTick !== prevConfig.currentTracklistTick) {
+      this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
+    } else if (newConfig.gridSubdivisions !== prevConfig.gridSubdivisions) {
+      this.drawAllGrids();
+    }
+  }
+
   private createArborescence() {
     this.root_div.appendChild(this.app.canvas);
 
@@ -198,12 +220,17 @@ export default class PianoRollEngine {
         isSelected: true,
         midi: 127 - Math.round(pos.y / rowHeight),
         name: "",
-        ticks: getNearestSubdivisionRoundedTick(this.midiObject.header.ppq, [1, 1], pos.x),
+        ticks: getNearestSubdivisionRoundedTick(
+          this.midiObject.header.ppq,
+          [1, 1],
+          pos.x,
+          this.project.config.magnetism,
+        ),
         time: 2000,
         velocity: 100,
       };
       alreadyClicked = false;
-      return this.onCommand(new AddNotesCommand([newNote], 0));
+      return this.triggerMidiCommand(new AddNotesCommand([newNote], 0));
     };
 
     this.notes_grid_container.on("pointerdown", (e) => {
@@ -218,7 +245,7 @@ export default class PianoRollEngine {
         this.panController.updateLastDragPos(e);
       } else if (e.button === 0) {
         this.selectionController.unselectAll();
-        this.tracklistRenderer.updatePosition(e);
+        this.tracklistRenderer.updatePositionFromUser(e);
       } else {
         this.selectionController.updateSelectionOrigin(e);
       }
@@ -250,10 +277,11 @@ export default class PianoRollEngine {
 
   private createGridRenderer = () => {
     this.gridRenderer = new GridRenderer({
+      engine: this,
       graphics: this.grid,
       notesGrid: this.notes_grid_container,
       appScreen: this.app.screen,
-      midiObject: () => this.midi_object,
+      midiObject: () => this.midiObject,
       constants: {
         TOTAL_NOTES,
         PIANO_KEYS_WIDTH,
@@ -265,7 +293,7 @@ export default class PianoRollEngine {
       graphics: this.velocityGrid,
       notesGrid: this.notes_grid_container,
       appScreen: this.app.screen,
-      midiObject: () => this.midi_object,
+      midiObject: () => this.midiObject,
       constants: {
         PIANO_KEYS_WIDTH,
         VELOCITY_ZONE_HEIGHT,
@@ -274,11 +302,12 @@ export default class PianoRollEngine {
   };
   private createNotesRenderer = () => {
     this.notesRenderer = new NotesRenderer({
+      engine: this,
       container: this.notes_container,
       notesGrid: this.notes_grid_container,
       appScreen: this.app.screen,
-      midiObject: () => this.midi_object,
-      onCommand: this.onCommand,
+      midiObject: () => this.midiObject,
+      triggerMidiCommand: this.triggerMidiCommand,
       constants: { TOTAL_NOTES },
     });
   };
@@ -286,7 +315,7 @@ export default class PianoRollEngine {
     this.velocityRenderer = new VelocityRenderer({
       container: this.velocity_notes_container,
       velocityContainer: this.velocity_container,
-      midiObject: () => this.midi_object,
+      midiObject: () => this.midiObject,
     });
   };
   private createTracklistRenderer = () => {
@@ -298,6 +327,7 @@ export default class PianoRollEngine {
   };
   private createLayoutManager = () => {
     this.layoutManager = new LayoutManager({
+      engine: this,
       app: this.app,
       rootDiv: this.root_div,
       notesGrid: this.notes_grid_container,
@@ -307,7 +337,7 @@ export default class PianoRollEngine {
       velocityMask: this.velocity_mask,
       pianoRollBg: this.piano_roll_bg,
       velocityBg: this.velocity_bg,
-      midiObject: () => this.midi_object,
+      midiObject: () => this.midiObject,
       constants: {
         PIANO_KEYS_WIDTH,
         VELOCITY_ZONE_HEIGHT,
@@ -342,7 +372,7 @@ export default class PianoRollEngine {
       notesGrid: this.notes_grid_container,
       velocityContainer: this.velocity_container,
       pianoKeysContainer: this.piano_keys_container,
-      midiObject: () => this.midi_object,
+      midiObject: () => this.midiObject,
       constants: {
         PIANO_KEYS_WIDTH,
         VELOCITY_ZONE_HEIGHT,
@@ -358,7 +388,7 @@ export default class PianoRollEngine {
       notesGrid: this.notes_grid_container,
       notesContainer: this.notes_container,
       selectSquare: this.select_square,
-      onCommand: this.onCommand,
+      triggerMidiCommand: this.triggerMidiCommand,
     });
   };
   private attachPanController = () => {
@@ -376,7 +406,8 @@ export default class PianoRollEngine {
   private attachKeyboardController = () => {
     this.keyboardController = new KeyboardController({
       parent: this,
-      onCommand: this.onCommand,
+      triggerMidiCommand: this.triggerMidiCommand,
+      triggerProjectCommand: this.triggerProjectCommand,
     });
   };
 

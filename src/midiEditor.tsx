@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { MidiObject, Project } from "../types/project";
 import { Spinner } from "./components/ui/spinner";
 import { Midi } from "@tonejs/midi";
 import { useHistoryState } from "@uidotdev/usehooks";
 import PianoRollEngine from "./pianoRollEngine";
-import { DeleteSelectedNotesCommand, SelectAllNotesCommand, type Command } from "./commands";
+import { type Command } from "./commands";
 import Stats from "stats.js";
+import { getMidiLength } from "./lib/utils";
 
 export default function MidiEditor({ initProject }: { initProject: Project }) {
   const [project, setProject] = useState<Project>(initProject);
   const [isLoading, setIsLoading] = useState(true);
-
   const {
     state: midiObject,
     set: setMidiObject,
@@ -21,6 +21,7 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
   } = useHistoryState<MidiObject | null>(null);
 
   const midiRef = useRef(midiObject);
+
   useEffect(() => {
     midiRef.current = midiObject;
   }, [midiObject]);
@@ -53,22 +54,19 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
         header: json.header,
         tracks: json.tracks,
       };
-      setMidiObject({
+      const midiObject = {
         ...initialMidiObject,
         tracks: initialMidiObject.tracks.map((track) => ({
           ...track,
           notes: track.notes.map((n) => ({ ...n, isSelected: false })),
         })),
-      });
+      };
+      setMidiObject({ ...midiObject, durationInTicks: getMidiLength(midiObject) + 200 });
       setIsLoading(false);
     };
     loadMidi();
     trackPerfs();
   }, []);
-
-  useEffect(() => {
-    console.log(project);
-  }, [project]);
 
   const trackPerfs = () => {
     const stats = new Stats();
@@ -95,7 +93,12 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
         onContextMenu={(e) => e.preventDefault()}
       >
         {midiObject && !isLoading ? (
-          <PianoRoll midiObject={midiObject} setMidiObject={setMidiObject} />
+          <PianoRoll
+            midiObject={midiObject}
+            setMidiObject={setMidiObject}
+            project={project}
+            setProject={setProject}
+          />
         ) : (
           <Spinner className="size-5" />
         )}
@@ -107,38 +110,55 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
 function PianoRoll({
   midiObject,
   setMidiObject,
+  project,
+  setProject,
 }: {
   midiObject: MidiObject;
   setMidiObject: (newPresent: MidiObject | null) => void;
+  project: Project;
+  setProject: Dispatch<SetStateAction<Project>>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<PianoRollEngine | null>(null);
-
   const midiRef = useRef(midiObject);
+  const projectRef = useRef(project);
+
   useEffect(() => {
     midiRef.current = midiObject;
   }, [midiObject]);
 
-  const handleCommand = (command: Command<MidiObject>) => {
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
+
+  const handleMidiCommand = (command: Command<MidiObject>) => {
     if (midiRef.current) {
       const newState = command.execute(midiRef.current);
       setMidiObject(newState);
     }
   };
 
-  const commandRef = useRef(handleCommand);
-  commandRef.current = handleCommand;
+  const handleProjectCommand = (command: Command<Project>) => {
+    if (projectRef.current) {
+      const newState = command.execute(projectRef.current);
+      setProject(newState);
+    }
+  };
+
+  const midiCommandRef = useRef(handleMidiCommand);
+  const projectCommandRef = useRef(handleProjectCommand);
 
   useEffect(() => {
     if (!containerRef.current || engineRef.current) return;
-
-    const engine = new PianoRollEngine(containerRef.current, midiObject, (cmd) =>
-      commandRef.current(cmd),
+    const engine = new PianoRollEngine(
+      containerRef.current,
+      midiObject,
+      (midiCommand) => midiCommandRef.current(midiCommand),
+      project,
+      (projectCommand) => projectCommandRef.current(projectCommand),
     );
-
     engineRef.current = engine;
     engine.init();
-
     return () => {
       engine.destroy();
       engineRef.current = null;
@@ -150,6 +170,12 @@ function PianoRoll({
       engineRef.current.updateMidiData(midiObject);
     }
   }, [midiObject]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.updateProjectData(project);
+    }
+  }, [project]);
 
   return (
     <div className="flex flex-col w-full h-full gap-5">

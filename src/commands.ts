@@ -1,4 +1,4 @@
-import type { MidiObject, Note } from "types/project";
+import type { MidiObject, Note, Project } from "types/project";
 import { getMidiLength, getMidiLengthFromNotes } from "./lib/utils";
 
 export interface Command<TState> {
@@ -159,6 +159,15 @@ export class AddNotesCommand implements Command<MidiObject> {
         };
       }),
       durationInTicks: Math.max(getMidiLengthFromNotes(this.notes), state.durationInTicks),
+    };
+  }
+}
+
+export class ToggleMagnetismCommand implements Command<Project> {
+  execute(state: Project): Project {
+    return {
+      ...state,
+      config: { ...state.config, magnetism: !state.config.magnetism },
     };
   }
 }

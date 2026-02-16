@@ -1,8 +1,10 @@
+import type PianoRollEngine from "@/pianoRollEngine";
 import { getSubdivisionTickInterval } from "../lib/utils";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface GridRendererDeps {
+  engine: PianoRollEngine;
   graphics: Graphics;
   notesGrid: Container;
   appScreen: { width: number; height: number };
@@ -26,6 +28,7 @@ export class GridRenderer {
     graphics.clear();
 
     const rowHeight = appScreen.height / constants.TOTAL_NOTES;
+
     const currentScaleX = notesGrid.scale.x;
 
     const viewLeftTick = notesGrid.toLocal({
@@ -60,9 +63,9 @@ export class GridRenderer {
 
     const ppq = midiObject().header.ppq;
 
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [1, 1]), "#272727", 15);
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [2, 1]), "#2c2c2c", 10);
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [4, 1]), "#555555", 5);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [1, 1]), "#272727", 20);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [2, 1]), "#2c2c2c", 20);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [4, 1]), "#555555", 20);
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {
