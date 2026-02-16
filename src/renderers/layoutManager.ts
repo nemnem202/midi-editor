@@ -53,6 +53,7 @@ export class LayoutManager {
 
   private attachResize() {
     this.deps.app.renderer.on("resize", () => {
+      this.resizeOnInit();
       this.updateMask();
       this.updateHitbox();
 

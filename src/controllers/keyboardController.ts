@@ -14,42 +14,53 @@ interface KeyboardControllerDeps {
   onCommand: (command: Command<MidiObject>) => void;
 }
 
+type ShortcutMap = Map<string, () => void>;
+
 export default class KeyboardController {
   private copyedNotes: Note[] = [];
 
+  private shortcutMap: ShortcutMap = new Map([
+    ["ctrl+a", () => this.selectAll()],
+    ["ctrl+c", () => this.copy()],
+    ["ctrl+v", () => this.paste()],
+    ["ctrl+x", () => this.cut()],
+    ["arrowup", () => this.moveNoteUp()],
+    ["arrowdown", () => this.moveNoteDown()],
+    ["ctrl+arrowup", () => this.moveNoteUp(12)],
+    ["ctrl+arrowdown", () => this.moveNoteDown(12)],
+    ["w", () => this.setTracklistToStart()],
+  ]);
+
   constructor(private deps: KeyboardControllerDeps) {
-    window.addEventListener("keydown", this.handleKeyobardEvents);
+    window.addEventListener("keydown", this.handleKeyboardEvents);
   }
 
-  private handleKeyobardEvents = (e: KeyboardEvent) => {
-    const key = e.key.toLowerCase();
-    let eventHasBeenHandled = true;
-    console.log(key);
-    if (e.ctrlKey) {
-      if (key === "a") {
-        this.selectAll();
-      } else if (key === "c") {
-        this.copy();
-      } else if (key === "v") {
-        this.paste();
-      } else if (key === "x") {
-        this.cut();
-      } else if (key === "arrowup") {
-        this.moveNoteUp(12);
-      } else if (key === "arrowdown") {
-        this.moveNoteDown(12);
-      }
-    } else if (e.altKey) {
-    } else {
-      if (key === "arrowup") {
-        this.moveNoteUp();
-      } else if (key === "arrowdown") {
-        this.moveNoteDown();
-      }
-    }
+  destroy() {
+    window.removeEventListener("keydown", this.handleKeyboardEvents);
+  }
 
-    eventHasBeenHandled ?? e.preventDefault();
+  private handleKeyboardEvents = (e: KeyboardEvent) => {
+    const key = this.normalizeShortcut(e);
+    const action = this.shortcutMap.get(key);
+
+    if (action) {
+      e.preventDefault();
+      action();
+    }
   };
+
+  private normalizeShortcut(e: KeyboardEvent): string {
+    const parts: string[] = [];
+
+    if (e.ctrlKey) parts.push("ctrl");
+    if (e.altKey) parts.push("alt");
+    if (e.shiftKey) parts.push("shift");
+    if (e.metaKey) parts.push("meta");
+
+    parts.push(e.key.toLowerCase());
+
+    return parts.join("+");
+  }
 
   private selectAll() {
     this.deps.onCommand(new SelectAllNotesCommand());
@@ -112,7 +123,7 @@ export default class KeyboardController {
     }
   }
 
-  destroy() {
-    window.removeEventListener("keydown", this.handleKeyobardEvents);
+  private setTracklistToStart() {
+    this.deps.parent.setTracklistPos(0);
   }
 }

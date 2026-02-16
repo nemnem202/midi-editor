@@ -22,8 +22,13 @@ export default class TracklistRenderer {
     track.x = this.tracklistPos;
   }
 
-  updatePosition(e: FederatedPointerEvent) {
-    this.tracklistPos = e.getLocalPosition(this.deps.container).x;
+  updatePosition(e: FederatedPointerEvent | number) {
+    if (e instanceof FederatedPointerEvent) {
+      this.tracklistPos = e.getLocalPosition(this.deps.container).x;
+    } else {
+      this.tracklistPos = e;
+    }
+
     this.deps.track.x = this.tracklistPos;
   }
   get tracklistPosition() {

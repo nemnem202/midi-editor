@@ -132,6 +132,10 @@ export default class PianoRollEngine {
     this.is_ready = true;
   };
 
+  setTracklistPos(pos: number) {
+    this.tracklistRenderer.updatePosition(pos);
+  }
+
   public destroy() {
     if (this.app) {
       this.app.renderer.off("resize");
