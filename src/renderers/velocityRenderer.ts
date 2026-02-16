@@ -1,9 +1,10 @@
-import { Container } from "pixi.js";
+import { Container, Texture } from "pixi.js";
 import type { MidiObject } from "types/project";
 import { colorFromValue } from "../lib/utils";
-import { NoteSprite } from "../pianoRollEngine";
+import PianoRollEngine, { NoteGraphic, NoteSprite } from "../pianoRollEngine";
 
 interface VelocityRendererDeps {
+  engine: PianoRollEngine;
   container: Container<NoteSprite>;
   velocityContainer: Container;
   midiObject: () => MidiObject;
@@ -17,29 +18,34 @@ export class VelocityRenderer {
   }
 
   draw() {
-    const { container, velocityContainer, midiObject } = this.deps;
+    const { container, velocityContainer, midiObject, engine } = this.deps;
 
     container.removeChildren().forEach((child) => child.destroy());
 
-    // midiObject().tracks.forEach((track) => {
-    //   track.notes.forEach((note) => {
-    //     const graphic = new NoteSprite();
+    // .tracks.forEach((track) => {
+    midiObject().tracks[engine.project.config.displayedTrackIndex].notes.forEach((note) => {
+      const sprite = new NoteSprite(Texture.WHITE);
 
-    //     graphic
-    //       .moveTo(note.ticks, velocityContainer.height - velocityContainer.height * note.velocity)
-    //       .lineTo(note.ticks, velocityContainer.height);
+      sprite.x = note.ticks;
+      sprite.y = velocityContainer.height - velocityContainer.height * note.velocity;
 
-    //     graphic.stroke({
-    //       color: colorFromValue(note.velocity * 10),
-    //       pixelLine: true,
-    //     });
+      sprite.width = 1 / velocityContainer.scale._x;
+      sprite.height = velocityContainer.height * note.velocity;
 
-    //     graphic.eventMode = "static";
-    //     graphic.cursor = "pointer";
-    //     graphic.noteData = note;
+      sprite.tint = colorFromValue(note.velocity * 10);
 
-    //     container.addChild(graphic);
-    //   });
+      sprite.eventMode = "static";
+      sprite.cursor = "pointer";
+      sprite.noteData = note;
+
+      container.addChild(sprite);
+    });
     // });
+  }
+
+  updateWidth() {
+    this.deps.container.children.forEach((sprite) => {
+      sprite.width = 1 / this.deps.velocityContainer.scale._x;
+    });
   }
 }

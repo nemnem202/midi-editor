@@ -28,6 +28,19 @@ const VELOCITY_ZONE_GAP = 20;
 const TOTAL_NOTES = 128;
 const CORNER_RADIUS = 10;
 
+export class NoteGraphic extends Graphics {
+  noteData: Note = {
+    duration: 0,
+    durationTicks: 0,
+    isSelected: false,
+    midi: 0,
+    name: "",
+    ticks: 0,
+    time: 0,
+    velocity: 0,
+  };
+}
+
 export class NoteSprite extends Sprite {
   noteData: Note = {
     duration: 0,
@@ -314,6 +327,7 @@ export default class PianoRollEngine {
   };
   private createVelocityRenderer = () => {
     this.velocityRenderer = new VelocityRenderer({
+      engine: this,
       container: this.velocity_notes_container,
       velocityContainer: this.velocity_container,
       midiObject: () => this.midiObject,
@@ -381,6 +395,7 @@ export default class PianoRollEngine {
       onAfterTransform: () => {
         this.drawAllGrids();
         this.layoutManager.updateHitbox();
+        this.velocityRenderer.updateWidth();
       },
     });
   };
