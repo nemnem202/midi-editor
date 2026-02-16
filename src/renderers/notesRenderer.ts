@@ -4,7 +4,7 @@ import {
   UpdateNotesCommand,
   type Command,
 } from "../commands";
-import { colorFromValue } from "../lib/utils";
+import { colorFromValue, getNearestSubdivisionRoundedTick } from "../lib/utils";
 import { Container, FederatedPointerEvent, Graphics } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
 
@@ -110,11 +110,15 @@ export class NotesRenderer {
 
       let offsetDx = dx;
       state.initialStates?.forEach((init) => {
-        if (init.x + offsetDx < 0) offsetDx = -init.x;
+        if (init.x + offsetDx < 0) offsetDx = offsetDx - init.x;
       });
 
       state.initialStates?.forEach((init, g) => {
-        g.x = init.x + offsetDx;
+        g.x = getNearestSubdivisionRoundedTick(
+          this.deps.midiObject().header.ppq,
+          [1, 1],
+          init.x + offsetDx,
+        );
         const rawY = init.y + dy;
         g.y = Math.round(rawY / rowHeight) * rowHeight;
       });
@@ -125,10 +129,22 @@ export class NotesRenderer {
       state.initialStates?.forEach((init, g) => {
         let newDuration = init.duration;
         if (state.behavior === "rightResize") {
-          newDuration = Math.max(MIN_DURATION, init.duration + dx);
+          newDuration = getNearestSubdivisionRoundedTick(
+            this.deps.midiObject().header.ppq,
+            [1, 1],
+            Math.max(MIN_DURATION, init.duration + dx),
+          );
         } else {
-          newDuration = Math.max(MIN_DURATION, init.duration - dx);
-          g.x = init.x + (init.duration - newDuration);
+          newDuration = getNearestSubdivisionRoundedTick(
+            this.deps.midiObject().header.ppq,
+            [1, 1],
+            Math.max(MIN_DURATION, init.duration - dx),
+          );
+          g.x = getNearestSubdivisionRoundedTick(
+            this.deps.midiObject().header.ppq,
+            [1, 1],
+            init.x + (init.duration - newDuration),
+          );
         }
 
         (g as any).tempDuration = newDuration;

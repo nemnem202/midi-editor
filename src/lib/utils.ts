@@ -74,3 +74,16 @@ export function findFirstNoteTick(notes: Note[]): number {
   }
   return ticks ?? 0;
 }
+
+export function getSubdivisionTickInterval(ppq: number, resolution: [number, number]) {
+  return (resolution[0] / resolution[1]) * ppq;
+}
+
+export function getNearestSubdivisionRoundedTick(
+  ppq: number,
+  resolution: [number, number],
+  tick: number,
+) {
+  const interval = getSubdivisionTickInterval(ppq, resolution);
+  return Math.round(tick / interval) * interval;
+}

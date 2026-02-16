@@ -1,3 +1,4 @@
+import { getSubdivisionTickInterval } from "../lib/utils";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
 
@@ -59,9 +60,9 @@ export class GridRenderer {
 
     const ppq = midiObject().header.ppq;
 
-    this.drawSubdivisions(ppq / 4, "#222222", 15);
-    this.drawSubdivisions(ppq, "#333333", 10);
-    this.drawSubdivisions(ppq * 4, "#444444", 5);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [1, 1]), "#272727", 15);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [2, 1]), "#2c2c2c", 10);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [4, 1]), "#555555", 5);
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {

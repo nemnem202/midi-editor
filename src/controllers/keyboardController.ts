@@ -31,7 +31,6 @@ export default class KeyboardController {
     ["w", () => this.setTracklistToStart()],
     ["backspace", () => this.deleteSelected()],
     ["delete", () => this.deleteSelected()],
-    ["alt", () => this.setGrabbingCursor()],
   ]);
 
   constructor(private deps: KeyboardControllerDeps) {
@@ -56,7 +55,7 @@ export default class KeyboardController {
     const parts: string[] = [];
 
     if (e.ctrlKey) parts.push("ctrl");
-    if (e.altKey && e.key.toLowerCase() != "alt") parts.push("alt");
+    if (e.altKey) parts.push("alt");
     if (e.shiftKey) parts.push("shift");
     if (e.metaKey) parts.push("meta");
 
@@ -132,11 +131,5 @@ export default class KeyboardController {
 
   private setTracklistToStart() {
     this.deps.parent.setTracklistPos(0);
-  }
-
-  private setGrabbingCursor() {
-    if (document.body.style.cursor !== "grabbing") {
-      document.body.style.cursor = "grab";
-    }
   }
 }

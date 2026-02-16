@@ -1,8 +1,11 @@
+import { getNearestSubdivisionRoundedTick } from "../lib/utils";
+import type PianoRollEngine from "@/pianoRollEngine";
 import { FederatedPointerEvent, Graphics, type Container } from "pixi.js";
 
 interface TracklistDeps {
   container: Container;
   track: Graphics;
+  engine: PianoRollEngine;
 }
 
 export default class TracklistRenderer {
@@ -28,8 +31,11 @@ export default class TracklistRenderer {
     } else {
       this.tracklistPos = e;
     }
-
-    this.deps.track.x = this.tracklistPos;
+    this.deps.track.x = getNearestSubdivisionRoundedTick(
+      this.deps.engine.midiObject.header.ppq,
+      [1, 1],
+      this.tracklistPos,
+    );
   }
   get tracklistPosition() {
     return this.tracklistPos;

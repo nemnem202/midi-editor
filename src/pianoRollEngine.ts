@@ -1,6 +1,13 @@
-import { Application, Container, FederatedWheelEvent, Graphics, Rectangle } from "pixi.js";
+import {
+  Application,
+  Container,
+  FederatedPointerEvent,
+  FederatedWheelEvent,
+  Graphics,
+  Rectangle,
+} from "pixi.js";
 import type { MidiObject, Note } from "types/project";
-import { type Command } from "./commands";
+import { AddNotesCommand, type Command } from "./commands";
 import ViewportController from "./controllers/viewportController";
 import { GridRenderer } from "./renderers/gridRenderer";
 import { VelocityGridRenderer } from "./renderers/velocityGridRenderer";
@@ -12,6 +19,7 @@ import { LayoutManager } from "./renderers/layoutManager";
 import TracklistRenderer from "./renderers/tracklistRenderer";
 import KeyboardController from "./controllers/keyboardController";
 import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
+import { getNearestSubdivisionRoundedTick } from "./lib/utils";
 
 const PIANO_KEYS_WIDTH = 50;
 const VELOCITY_ZONE_HEIGHT = 150;
@@ -105,7 +113,7 @@ export default class PianoRollEngine {
     await this.app.init({
       backgroundAlpha: 0,
       resizeTo: this.root_div,
-      antialias: true,
+      antialias: false,
     });
 
     this.createArborescence();
@@ -175,11 +183,36 @@ export default class PianoRollEngine {
     this.app.stage.addChild(this.piano_roll_bg);
     this.app.stage.addChild(this.velocity_bg);
   }
+
   private addListeners = () => {
-    this.notes_grid_container.on("wheel", (e: FederatedWheelEvent) =>
-      this.viewportController.handleZoom(e),
-    );
+    let alreadyClicked = false;
+    let timeout: number | null = null;
+
+    const addNote = (e: FederatedPointerEvent) => {
+      timeout && clearTimeout(timeout);
+      const rowHeight = this.app.screen.height / TOTAL_NOTES;
+      const pos = this.notes_grid_container.toLocal(e.global);
+      const newNote: Note = {
+        duration: 2000,
+        durationTicks: 200,
+        isSelected: true,
+        midi: 127 - Math.round(pos.y / rowHeight),
+        name: "",
+        ticks: getNearestSubdivisionRoundedTick(this.midiObject.header.ppq, [1, 1], pos.x),
+        time: 2000,
+        velocity: 100,
+      };
+      alreadyClicked = false;
+      return this.onCommand(new AddNotesCommand([newNote], 0));
+    };
+
     this.notes_grid_container.on("pointerdown", (e) => {
+      if (alreadyClicked) {
+        return addNote(e);
+      } else {
+        alreadyClicked = true;
+        timeout = setTimeout(() => (alreadyClicked = false), 300);
+      }
       if (e.button === 0 && e.altKey) {
         document.body.style.cursor = "grabbing";
         this.panController.updateLastDragPos(e);
@@ -190,6 +223,10 @@ export default class PianoRollEngine {
         this.selectionController.updateSelectionOrigin(e);
       }
     });
+
+    this.notes_grid_container.on("wheel", (e: FederatedWheelEvent) =>
+      this.viewportController.handleZoom(e),
+    );
 
     this.notes_grid_container.on("globalpointermove", (e) => {
       this.selectionController.tryDrawSelection(e);
@@ -256,6 +293,7 @@ export default class PianoRollEngine {
     this.tracklistRenderer = new TracklistRenderer({
       container: this.notes_grid_container,
       track: this.tracklist,
+      engine: this,
     });
   };
   private createLayoutManager = () => {
