@@ -63,12 +63,12 @@ export class NotesRenderer {
       sprite.eventMode = "static";
 
       if (trackIndex !== engine.project.config.displayedTrackIndex) {
-        note.isInCurrentTrack = false;
         sprite.tint = grayFromScale(trackIndex * 50 + 3000);
         return container.addChild(sprite);
       }
-      note.isInCurrentTrack = true;
+
       if (note.isSelected) {
+        // sprite.tint({ color:  });
         sprite.tint = "#ff0000";
       } else {
         sprite.tint = colorFromValue(channel);

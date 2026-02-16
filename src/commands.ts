@@ -19,12 +19,11 @@ export class DeleteNoteCommand implements Command<MidiObject> {
   }
 }
 
-export type PositionData = {
+type PositionData = {
   note: Note;
-  ticks?: number;
-  midi?: number;
-  durationTicks?: number;
-  newvelocity?: number;
+  ticks: number;
+  midi: number;
+  durationTicks: number;
 };
 
 export class UpdateNotesCommand implements Command<MidiObject> {
@@ -37,15 +36,13 @@ export class UpdateNotesCommand implements Command<MidiObject> {
       tracks: state.tracks.map((track) => ({
         ...track,
         notes: track.notes.map((note) => {
-          if (!note.isInCurrentTrack) return note;
           const update = moveMap.get(note);
           return update
             ? {
                 ...note,
-                ticks: update.ticks ?? note.ticks,
-                midi: update.midi ?? note.midi,
-                durationTicks: update.durationTicks ?? note.durationTicks,
-                velocity: update.newvelocity ?? note.velocity,
+                ticks: update.ticks,
+                midi: update.midi,
+                durationTicks: update.durationTicks,
               }
             : note;
         }),
@@ -108,13 +105,7 @@ export class SelectNotesCommand implements Command<MidiObject> {
         ...track,
         notes: track.notes.map((n) => ({
           ...n,
-          isSelected: this.notesToSelect.some(
-            (nt) =>
-              nt.ticks === n.ticks &&
-              nt.midi === n.midi &&
-              n.durationTicks === nt.durationTicks &&
-              nt.isInCurrentTrack,
-          ),
+          isSelected: this.notesToSelect.some((nt) => nt.ticks === n.ticks && nt.midi === n.midi),
         })),
       })),
     };
@@ -127,7 +118,7 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
       tracks: state.tracks.map((track) => ({
         ...track,
 
-        notes: track.notes.map((n) => ({ ...n, isSelected: n.isInCurrentTrack })),
+        notes: track.notes.map((n) => ({ ...n, isSelected: true })),
       })),
     };
   }

@@ -38,7 +38,6 @@ export class NoteGraphic extends Graphics {
     ticks: 0,
     time: 0,
     velocity: 0,
-    isInCurrentTrack: false,
   };
 }
 
@@ -52,7 +51,6 @@ export class NoteSprite extends Sprite {
     ticks: 0,
     time: 0,
     velocity: 0,
-    isInCurrentTrack: false,
   };
 }
 
@@ -244,7 +242,6 @@ export default class PianoRollEngine {
         ),
         time: 2000,
         velocity: 100,
-        isInCurrentTrack: true,
       };
       alreadyClicked = false;
       return this.triggerMidiCommand(new AddNotesCommand([newNote], 0));
@@ -330,7 +327,6 @@ export default class PianoRollEngine {
   };
   private createVelocityRenderer = () => {
     this.velocityRenderer = new VelocityRenderer({
-      triggerMidiCommand: this.triggerMidiCommand,
       engine: this,
       container: this.velocity_notes_container,
       velocityContainer: this.velocity_container,
@@ -404,7 +400,6 @@ export default class PianoRollEngine {
   };
   private attachSelectionController = () => {
     this.selectionController = new SelectionController({
-      engine: this,
       notesGrid: this.notes_grid_container,
       notesContainer: this.notes_container,
       selectSquare: this.select_square,

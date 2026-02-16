@@ -36,7 +36,6 @@ export type Config = {
 
 export interface Note extends NoteJSON {
   isSelected: boolean;
-  isInCurrentTrack: boolean;
 }
 
 export interface Track {
