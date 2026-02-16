@@ -1,4 +1,4 @@
-import { Container, FederatedPointerEvent, Rectangle, Texture } from "pixi.js";
+import { Container, FederatedPointerEvent, Texture } from "pixi.js";
 import type { MidiObject } from "types/project";
 import { colorFromValue } from "../lib/utils";
 import PianoRollEngine, { NoteSprite } from "../pianoRollEngine";
@@ -14,9 +14,12 @@ interface VelocityRendererDeps {
 
 export class VelocityRenderer {
   private deps: VelocityRendererDeps;
-  private handleWidth: number = 10;
+
+  private readonly HANDLE_WIDTH_PX = 10;
+
   constructor(deps: VelocityRendererDeps) {
     this.deps = deps;
+    this.attachContainerControls();
   }
 
   draw() {
@@ -24,70 +27,87 @@ export class VelocityRenderer {
 
     container.removeChildren().forEach((child) => child.destroy());
 
-    midiObject().tracks[engine.project.config.displayedTrackIndex].notes.forEach((note) => {
+    const notes = midiObject().tracks[engine.project.config.displayedTrackIndex].notes;
+
+    const sortedNotes = [...notes].sort((a, b) => (a.isSelected ? 1 : -1));
+
+    sortedNotes.forEach((note) => {
       const sprite = new NoteSprite(Texture.WHITE);
-      sprite.eventMode = "static";
+
+      const vHeight = note.velocity * velocityContainer.height;
+
       sprite.x = note.ticks;
-      sprite.y = velocityContainer.height - velocityContainer.height * note.velocity;
+      sprite.y = velocityContainer.height - vHeight;
 
-      sprite.width = 10 / velocityContainer.scale._x;
-      sprite.height = velocityContainer.height * note.velocity;
+      sprite.width = this.HANDLE_WIDTH_PX / velocityContainer.scale.x;
+      sprite.height = vHeight;
 
-      sprite.tint = colorFromValue(note.velocity * 10);
+      sprite.tint = note.isSelected ? colorFromValue(note.midi) : "#707070";
 
-      sprite.eventMode = "static";
-      sprite.cursor = "pointer";
+      sprite.eventMode = "none";
       sprite.noteData = note;
 
       container.addChild(sprite);
     });
-
-    this.attachControls();
   }
 
   updateWidth() {
-    console.log(this.handleWidth, this.deps.velocityContainer.scale._x);
-    this.handleWidth = 10 / this.deps.velocityContainer.scale._x;
-    console.log(this.handleWidth);
+    const scaleX = this.deps.velocityContainer.scale.x;
     this.deps.container.children.forEach((sprite) => {
-      sprite.width = 10 / this.deps.velocityContainer.scale._x;
+      sprite.width = this.HANDLE_WIDTH_PX / scaleX;
     });
   }
 
-  private attachControls() {
+  private attachContainerControls() {
     const { container, triggerMidiCommand, velocityContainer } = this.deps;
+    let isDragging = false;
 
-    let startDragPos: { x: number; y: number } | null = null;
-
-    const handleMouseUp = () => {
-      startDragPos = null;
-
-      const notesData: NoteUpdateData[] = container.children.map((e) => ({
-        note: e.noteData,
-        velocity: Math.max(0, Math.min(1 - e.y / velocityContainer.height, 1)),
-      }));
-
-      triggerMidiCommand(new UpdateNotesCommand(notesData));
-    };
     const handleMouseDown = (e: FederatedPointerEvent) => {
-      const pos = container.toLocal(e.global);
-      startDragPos = { x: pos.x, y: pos.y };
+      if (e.button === 0) isDragging = true;
+      document.body.style.cursor = "crosshair";
     };
 
     const handleMouseMove = (e: FederatedPointerEvent) => {
-      if (!startDragPos) return;
-      const currentPosition = container.toLocal(e.global);
+      if (!isDragging) return;
 
-      container.children.forEach((c) => {
-        if (!startDragPos) return;
-        if (
-          c.x + this.handleWidth > currentPosition.x &&
-          c.x - this.handleWidth < currentPosition.x
-        ) {
-          c.y = currentPosition.y;
-          c.height = container.height - currentPosition.y;
+      const currentPosition = container.toLocal(e.global);
+      const scaleX = velocityContainer.scale.x;
+      const zoneHeight = velocityContainer.height;
+
+      container.children.forEach((sprite) => {
+        if (!sprite.noteData.isSelected) return;
+
+        const distance = Math.abs(sprite.x - currentPosition.x);
+
+        if (distance < this.HANDLE_WIDTH_PX / scaleX) {
+          const clampedY = Math.max(0, Math.min(currentPosition.y, zoneHeight));
+
+          sprite.y = clampedY;
+          sprite.height = zoneHeight - clampedY;
+
+          const tempVelocity = 1 - clampedY / zoneHeight;
+          sprite.tint = colorFromValue(sprite.noteData.midi, (1 - tempVelocity) * 40);
         }
       });
+    };
+
+    const handleMouseUp = () => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const zoneHeight = velocityContainer.height;
+
+      const updates: NoteUpdateData[] = container.children
+        .filter((s) => s.noteData.isSelected)
+        .map((s) => ({
+          note: s.noteData,
+          velocity: 1 - s.y / zoneHeight,
+        }));
+
+      if (updates.length > 0) {
+        triggerMidiCommand(new UpdateNotesCommand(updates));
+      }
+      document.body.style.cursor = "default";
     };
 
     container.on("pointerdown", handleMouseDown);
