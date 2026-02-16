@@ -30,31 +30,29 @@ export class UpdateNotesCommand implements Command<MidiObject> {
   constructor(private positions: PositionData[]) {}
 
   execute(state: MidiObject): MidiObject {
-    const moveMap = new Map(this.positions.map((m) => [m.note, m]));
-    const updatedMidiObject: MidiObject = {
+    return {
       ...state,
       tracks: state.tracks.map((track) => ({
         ...track,
         notes: track.notes.map((note) => {
-          const update = moveMap.get(note);
-          return update
-            ? {
-                ...note,
-                ticks: update.ticks,
-                midi: update.midi,
-                durationTicks: update.durationTicks,
-              }
-            : note;
+          // On cherche la mise à jour par correspondance de valeurs (Ticks/Midi originaux)
+          // car les références d'objets changent à cause du spread operator
+          const update = this.positions.find(
+            (p) => p.note.ticks === note.ticks && p.note.midi === note.midi,
+          );
+
+          if (update) {
+            return {
+              ...note,
+              ticks: update.ticks,
+              midi: update.midi,
+              durationTicks: update.durationTicks,
+            };
+          }
+          return note;
         }),
       })),
     };
-    const potentialMidiLength = getMidiLength(updatedMidiObject);
-    updatedMidiObject.durationInTicks = Math.max(
-      potentialMidiLength,
-      updatedMidiObject.durationInTicks,
-    );
-
-    return updatedMidiObject;
   }
 }
 
@@ -105,7 +103,9 @@ export class SelectNotesCommand implements Command<MidiObject> {
         ...track,
         notes: track.notes.map((n) => ({
           ...n,
-          isSelected: this.notesToSelect.some((nt) => nt.ticks === n.ticks && nt.midi === n.midi),
+          isSelected: this.notesToSelect.some(
+            (nt) => nt.ticks === n.ticks && nt.midi === n.midi && nt.isInCurrentTrack,
+          ),
         })),
       })),
     };
