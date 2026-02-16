@@ -399,7 +399,6 @@ export default class PianoRollEngine {
       onAfterTransform: () => {
         this.drawAllGrids();
         this.layoutManager.updateHitbox();
-        this.velocityRenderer.updateWidth();
       },
     });
   };

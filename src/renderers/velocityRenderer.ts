@@ -5,7 +5,6 @@ import PianoRollEngine, { NoteGraphic, NoteSprite } from "../pianoRollEngine";
 import { UpdateNotesCommand, type Command, type PositionData } from "../commands";
 
 interface VelocityRendererDeps {
-  engine: PianoRollEngine;
   container: Container<NoteSprite>;
   velocityContainer: Container;
   midiObject: () => MidiObject;
@@ -22,7 +21,7 @@ export class VelocityRenderer {
   }
 
   draw() {
-    const { container, velocityContainer, midiObject, engine } = this.deps;
+    const { container, velocityContainer, midiObject } = this.deps;
 
     container.removeChildren().forEach((child) => child.destroy());
     midiObject().tracks[engine.project.config.displayedTrackIndex].notes.forEach((note) => {
