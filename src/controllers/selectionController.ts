@@ -1,11 +1,11 @@
 import { Container, Graphics, FederatedPointerEvent } from "pixi.js";
 import type { Note, MidiObject } from "types/project";
 import { SelectNotesCommand, UnSelectAllNotesCommand, type Command } from "../commands";
-import type { NoteGraphic } from "../renderers/notesRenderer";
+import type { NoteSprite } from "../pianoRollEngine";
 
 interface SelectionDeps {
   notesGrid: Container;
-  notesContainer: Container<NoteGraphic>;
+  notesContainer: Container<NoteSprite>;
   selectSquare: Graphics;
   triggerMidiCommand: (command: Command<MidiObject>) => void;
 }

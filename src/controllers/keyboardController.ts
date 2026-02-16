@@ -8,7 +8,7 @@ import {
   type Command,
 } from "../commands";
 import type { MidiObject, Note, Project } from "types/project";
-import type PianoRollEngine from "@/pianoRollEngine";
+import type PianoRollEngine from "../pianoRollEngine";
 
 interface KeyboardControllerDeps {
   parent: PianoRollEngine;

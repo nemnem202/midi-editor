@@ -1,4 +1,4 @@
-import type PianoRollEngine from "@/pianoRollEngine";
+import type PianoRollEngine from "../pianoRollEngine";
 import { getSubdivisionTickInterval } from "../lib/utils";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";

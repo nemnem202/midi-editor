@@ -1,4 +1,4 @@
-import type PianoRollEngine from "@/pianoRollEngine";
+import type PianoRollEngine from "../pianoRollEngine";
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import type { MidiObject } from "types/project";
 

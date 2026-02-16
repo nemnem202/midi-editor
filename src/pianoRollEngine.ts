@@ -5,6 +5,7 @@ import {
   FederatedWheelEvent,
   Graphics,
   Rectangle,
+  Sprite,
 } from "pixi.js";
 import type { MidiObject, Note, Project } from "types/project";
 import { AddNotesCommand, type Command } from "./commands";
@@ -27,7 +28,7 @@ const VELOCITY_ZONE_GAP = 20;
 const TOTAL_NOTES = 128;
 const CORNER_RADIUS = 10;
 
-class NoteGraphic extends Graphics {
+export class NoteSprite extends Sprite {
   noteData: Note = {
     duration: 0,
     durationTicks: 0,
@@ -53,10 +54,10 @@ export default class PianoRollEngine {
 
   private piano_keys_container: Container = new Container({ eventMode: "passive" });
   private piano_roll_container: Container = new Container({ eventMode: "passive" });
-  private notes_container: Container<NoteGraphic> = new Container<NoteGraphic>({
+  private notes_container: Container<NoteSprite> = new Container<NoteSprite>({
     eventMode: "passive",
   });
-  private velocity_notes_container: Container<NoteGraphic> = new Container<NoteGraphic>({
+  private velocity_notes_container: Container<NoteSprite> = new Container<NoteSprite>({
     eventMode: "passive",
   });
   private notes_grid_container: Container = new Container({

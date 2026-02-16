@@ -1,4 +1,4 @@
-import type PianoRollEngine from "@/pianoRollEngine";
+import type PianoRollEngine from "../pianoRollEngine";
 import {
   DeleteNoteCommand,
   SelectNotesCommand,
@@ -6,16 +6,17 @@ import {
   type Command,
 } from "../commands";
 import { colorFromValue, getNearestSubdivisionRoundedTick, grayFromScale } from "../lib/utils";
-import { Container, FederatedPointerEvent, Graphics } from "pixi.js";
+import { Container, FederatedPointerEvent, Graphics, Texture } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
+import { NoteSprite } from "../pianoRollEngine";
 
-export class NoteGraphic extends Graphics {
-  noteData!: Note;
-}
+// export class NoteSprite extends Graphics {
+//   noteData!: Note;
+// }
 
 interface NotesRendererDeps {
   engine: PianoRollEngine;
-  container: Container<NoteGraphic>;
+  container: Container<NoteSprite>;
   notesGrid: Container;
   appScreen: { width: number; height: number };
   midiObject: () => MidiObject;
@@ -48,31 +49,33 @@ export class NotesRenderer {
     container.removeChildren().forEach((child) => child.destroy());
 
     allNotes.forEach(({ note, channel, trackIndex }) => {
-      const graphic = new NoteGraphic();
+      const sprite = new NoteSprite({ texture: Texture.WHITE });
 
-      graphic
-        .rect(0, 0, note.durationTicks, rowHeight)
-        .stroke({ color: "#000000", pixelLine: true });
+      // sprite
+      //   .rect(0, 0, note.durationTicks, rowHeight)
+      //   .stroke({ color: "#000000", pixelLine: true });
 
-      graphic.x = note.ticks;
-      graphic.y = (127 - note.midi) * rowHeight;
-      graphic.noteData = note;
-      graphic.eventMode = "static";
+      sprite.width = note.durationTicks;
+      sprite.height = rowHeight;
+      sprite.x = note.ticks;
+      sprite.y = (127 - note.midi) * rowHeight;
+      sprite.noteData = note;
+      sprite.eventMode = "static";
 
       if (trackIndex !== engine.project.config.displayedTrackIndex) {
-        graphic.fill(grayFromScale(trackIndex * 50 + 3000));
-        return container.addChild(graphic);
+        sprite.tint = grayFromScale(trackIndex * 50 + 3000);
+        return container.addChild(sprite);
       }
 
       if (note.isSelected) {
-        graphic.fill({ color: "#ffffff" });
-        graphic.tint = "#ff0000";
+        // sprite.tint({ color:  });
+        sprite.tint = "#ff0000";
       } else {
-        graphic.fill(colorFromValue(channel));
+        sprite.tint = colorFromValue(channel);
       }
 
-      this.attachEvents(graphic);
-      container.addChild(graphic);
+      this.attachEvents(sprite);
+      container.addChild(sprite);
     });
   }
 
@@ -80,11 +83,11 @@ export class NotesRenderer {
     return this.deps.appScreen.height / this.deps.constants.TOTAL_NOTES;
   }
 
-  private attachEvents(graphic: NoteGraphic) {
+  private attachEvents(graphic: NoteSprite) {
     const { notesGrid, triggerMidiCommand } = this.deps;
 
     const state = {
-      initialStates: null as Map<NoteGraphic, { x: number; y: number; duration: number }> | null,
+      initialStates: null as Map<NoteSprite, { x: number; y: number; duration: number }> | null,
       startMousePos: null as { x: number; y: number } | null,
       behavior: null as "leftResize" | "rightResize" | "move" | null,
     };
@@ -159,10 +162,10 @@ export class NotesRenderer {
         }
 
         (g as any).tempDuration = newDuration;
-        g.clear()
-          .rect(0, 0, newDuration, rowHeight)
-          .fill(g.noteData.isSelected ? "#ffffff" : colorFromValue(0))
-          .stroke({ color: "#000000", pixelLine: true });
+        g.width = newDuration;
+        // .rect(0, 0, newDuration, rowHeight)
+        // .fill(g.noteData.isSelected ? "#ffffff" : colorFromValue(0))
+        // .stroke({ color: "#000000", pixelLine: true });
       });
     };
 

@@ -1,5 +1,5 @@
 import { getNearestSubdivisionRoundedTick } from "../lib/utils";
-import type PianoRollEngine from "@/pianoRollEngine";
+import type PianoRollEngine from "../pianoRollEngine";
 import { FederatedPointerEvent, Graphics, type Container } from "pixi.js";
 
 interface TracklistDeps {
