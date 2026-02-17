@@ -44,7 +44,6 @@ export class NoteSprite extends Sprite {
 
 export default class PianoRollEngine {
   private is_ready = false;
-
   private engineMidiObject: MidiObject;
   private engineProject: Project;
   private triggerMidiCommand: (command: Command<MidiObject>) => void;
