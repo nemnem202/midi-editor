@@ -42,8 +42,8 @@ export class VelocityGridRenderer {
 
     const ppq = midiObject().header.ppq;
 
-    this.drawSub(ppq, "#333333", 10);
-    this.drawSub(ppq * 4, "#444444", 5);
+    this.drawSub(ppq, "#333333", 100);
+    this.drawSub(ppq * 4, "#444444", 100);
   }
 
   private drawSub(tickStep: number, color: string, minGap: number) {

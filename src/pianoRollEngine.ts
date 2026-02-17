@@ -22,7 +22,7 @@ import KeyboardController from "./controllers/keyboardController";
 import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
 import { getNearestSubdivisionRoundedTick } from "./lib/utils";
 
-const PIANO_KEYS_WIDTH = 50;
+const PIANO_KEYS_WIDTH = 100;
 const VELOCITY_ZONE_HEIGHT = 150;
 const VELOCITY_ZONE_GAP = 20;
 const TOTAL_NOTES = 128;
@@ -288,6 +288,7 @@ export default class PianoRollEngine {
       constants: {
         TOTAL_NOTES,
         PIANO_KEYS_WIDTH,
+        VELOCITY_ZONE_HEIGHT,
       },
     });
   };

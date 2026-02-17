@@ -12,6 +12,7 @@ interface GridRendererDeps {
   constants: {
     TOTAL_NOTES: number;
     PIANO_KEYS_WIDTH: number;
+    VELOCITY_ZONE_HEIGHT: number;
   };
 }
 
@@ -43,6 +44,10 @@ export class GridRenderer {
 
     const visibleWidthTicks = viewRightTick - viewLeftTick;
 
+    const totalDurationTicks = midiObject().durationInTicks;
+    const pianoRollHeight = appScreen.height - constants.VELOCITY_ZONE_HEIGHT;
+    graphics.rect(0, 0, totalDurationTicks, pianoRollHeight).fill({ color: "#131313" });
+
     graphics.beginPath();
 
     for (let i = 0; i < constants.TOTAL_NOTES; i++) {
@@ -52,7 +57,7 @@ export class GridRenderer {
       }
     }
 
-    graphics.fill({ color: "#2c2c2c" });
+    graphics.fill({ color: "#aaaaaa", alpha: 0.2 });
 
     graphics.beginPath();
     for (let i = 0; i <= constants.TOTAL_NOTES; i++) {
@@ -63,9 +68,9 @@ export class GridRenderer {
 
     const ppq = midiObject().header.ppq;
 
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [1, 1]), "#272727", 20);
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [2, 1]), "#2c2c2c", 20);
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [4, 1]), "#555555", 20);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [1, 1]), "#272727", 100);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [2, 1]), "#2c2c2c", 100);
+    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [4, 1]), "#555555", 100);
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {
