@@ -5,6 +5,15 @@ import { Input } from "./ui/input";
 import { Field, FieldLabel } from "./ui/field";
 import { Separator } from "./ui/separator";
 import type { ReactNode } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
@@ -62,6 +71,7 @@ export default function ControlsPannel() {
             className={` ${project.config.magnetism ? "stroke-chart-4" : "stroke-primary"}`}
           />
         </button>
+        <SubdivisionSelect />
       </ControlsSection>
     </div>
   );
@@ -72,5 +82,26 @@ function ControlsSection({ children }: { children: ReactNode }) {
     <div className="flex gap-2 w-fit h-15 px-5 bg-card rounded-xl items-center select-none">
       {children}
     </div>
+  );
+}
+
+function SubdivisionSelect() {
+  const { project, setProject } = useMidiContext();
+  return (
+    <Select defaultValue="4">
+      <SelectTrigger className="w-full max-w-48 select-none">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup className="select-none">
+          <SelectLabel>Subdivisions</SelectLabel>
+          {[1, 2, 4, 8, 16, 32, 64, 128].map((v) => (
+            <SelectItem value={String(v)} key={v}>
+              1/{v}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

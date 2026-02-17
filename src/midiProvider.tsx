@@ -94,7 +94,7 @@ export default function MidiProvider({
       setIsLoading(false);
     };
     loadMidi();
-    trackPerfs();
+    // trackPerfs();
   }, []);
 
   const trackPerfs = () => {

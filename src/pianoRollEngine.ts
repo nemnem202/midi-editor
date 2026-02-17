@@ -182,8 +182,12 @@ export default class PianoRollEngine {
     this.engineProject = newProject;
     if (newConfig.currentTracklistTick !== prevConfig.currentTracklistTick) {
       this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
-    } else if (newConfig.gridSubdivisions !== prevConfig.gridSubdivisions) {
+    }
+    if (newConfig.gridSubdivisions !== prevConfig.gridSubdivisions) {
       this.drawAllGrids();
+    }
+    if (newConfig.displayedTrackIndex !== prevConfig.displayedTrackIndex) {
+      this.drawAllNotes();
     }
   }
 

@@ -96,7 +96,7 @@ function PianoRoll({
 
   return (
     <div className="flex flex-col w-full h-full gap-5">
-      <div className="w-full h-full" ref={containerRef} tabIndex={0} />
+      <div className="w-full h-full focus:outline-none" ref={containerRef} tabIndex={0} />
     </div>
   );
 }
