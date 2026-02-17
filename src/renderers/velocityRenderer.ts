@@ -15,7 +15,7 @@ interface VelocityRendererDeps {
 export class VelocityRenderer {
   private deps: VelocityRendererDeps;
 
-  private readonly HANDLE_WIDTH_PX = 10;
+  private readonly HANDLE_WIDTH_PX = 5;
 
   constructor(deps: VelocityRendererDeps) {
     this.deps = deps;
@@ -42,11 +42,11 @@ export class VelocityRenderer {
       sprite.width = this.HANDLE_WIDTH_PX / velocityContainer.scale.x;
       sprite.height = vHeight;
 
-      sprite.tint = note.isSelected ? colorFromValue(note.midi) : "#707070";
+      sprite.tint = colorFromValue(note.midi);
+      sprite.alpha = note.isSelected ? 1 : 0.2;
 
-      sprite.eventMode = "none";
+      sprite.eventMode = "static";
       sprite.noteData = note;
-
       container.addChild(sprite);
     });
   }
@@ -86,7 +86,7 @@ export class VelocityRenderer {
           sprite.height = zoneHeight - clampedY;
 
           const tempVelocity = 1 - clampedY / zoneHeight;
-          sprite.tint = colorFromValue(sprite.noteData.midi, (1 - tempVelocity) * 40);
+          sprite.tint = colorFromValue(sprite.noteData.midi, (1 - tempVelocity) * 100);
         }
       });
     };

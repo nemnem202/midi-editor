@@ -135,7 +135,7 @@ export class UnSelectAllNotesCommand implements Command<MidiObject> {
         ...track,
         notes: track.notes.map((n) => {
           const isExcepted = this.excepted.some((e) => e.ticks === n.ticks && e.midi === n.midi);
-          return { ...n, isSelected: isExcepted ? n.isSelected : false };
+          return { ...n, isSelected: isExcepted };
         }),
       })),
     };

@@ -10,10 +10,6 @@ import { Container, FederatedPointerEvent, Graphics, Texture } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
 import { NoteSprite } from "../pianoRollEngine";
 
-// export class NoteSprite extends Graphics {
-//   noteData!: Note;
-// }
-
 interface NotesRendererDeps {
   engine: PianoRollEngine;
   container: Container<NoteSprite>;
@@ -54,10 +50,6 @@ export class NotesRenderer {
     allNotes.forEach(({ note, channel }) => {
       const sprite = new NoteSprite({ texture: Texture.WHITE });
 
-      // sprite
-      //   .rect(0, 0, note.durationTicks, rowHeight)
-      //   .stroke({ color: "#000000", pixelLine: true });
-
       sprite.width = note.durationTicks;
       sprite.height = rowHeight;
       sprite.x = note.ticks;
@@ -73,7 +65,6 @@ export class NotesRenderer {
       }
 
       if (note.isSelected) {
-        // sprite.tint({ color:  });
         sprite.tint = "#ff0000";
       } else {
         sprite.tint = colorFromValue(channel);
@@ -170,9 +161,6 @@ export class NotesRenderer {
 
         (g as any).tempDuration = newDuration;
         g.width = newDuration;
-        // .rect(0, 0, newDuration, rowHeight)
-        // .fill(g.noteData.isSelected ? "#ffffff" : colorFromValue(0))
-        // .stroke({ color: "#000000", pixelLine: true });
       });
     };
 
