@@ -122,6 +122,10 @@ export default class PianoRollEngine {
     return this.tracklistRenderer.tracklistPosition;
   }
 
+  get root() {
+    return this.root_div;
+  }
+
   init = async () => {
     await this.app.init({
       backgroundAlpha: 0,

@@ -33,6 +33,10 @@ export class UpdateNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
+      durationInTicks: Math.max(
+        getMidiLengthFromNotes(this.positions.map((p) => p.note)),
+        state.durationInTicks,
+      ),
       tracks: state.tracks.map((track) => ({
         ...track,
         notes: track.notes.map((note) => {
@@ -65,7 +69,7 @@ export class MoveNotesCommand implements Command<MidiObject> {
   ) {}
 
   execute(state: MidiObject): MidiObject {
-    return {
+    const nextState = {
       ...state,
       tracks: state.tracks.map((track) => ({
         ...track,
@@ -80,6 +84,13 @@ export class MoveNotesCommand implements Command<MidiObject> {
           return n;
         }),
       })),
+    };
+    return {
+      ...nextState,
+      durationInTicks: Math.max(
+        getMidiLengthFromNotes(state.tracks.flatMap((track) => track.notes)),
+        state.durationInTicks,
+      ),
     };
   }
 }

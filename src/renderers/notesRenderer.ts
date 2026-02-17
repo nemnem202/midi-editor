@@ -58,7 +58,7 @@ export class NotesRenderer {
       sprite.eventMode = "static";
       sprite.alpha = 1;
       if (!note.isInCurrentTrack) {
-        sprite.alpha = 0.2;
+        sprite.alpha = 0.1;
         sprite.eventMode = "none";
         sprite.tint = colorFromValue(channel);
         return container.addChild(sprite);

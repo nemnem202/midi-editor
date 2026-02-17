@@ -13,7 +13,7 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
         onContextMenu={(e) => e.preventDefault()}
       >
         <div className="flex flex-col w-full h-full gap-5 items-center justify-center">
-          <div className="w-full flex justify-between items-end">
+          <div className="w-full flex justify-between items-center">
             <ControlsPannel />
             <TrackSelect />
           </div>

@@ -45,8 +45,7 @@ export class GridRenderer {
     const visibleWidthTicks = viewRightTick - viewLeftTick;
 
     const totalDurationTicks = midiObject().durationInTicks;
-    const pianoRollHeight = appScreen.height - constants.VELOCITY_ZONE_HEIGHT;
-    graphics.rect(0, 0, totalDurationTicks, pianoRollHeight).fill({ color: "#131313" });
+    graphics.rect(0, 0, totalDurationTicks, appScreen.height).fill({ color: "#131313" });
 
     graphics.beginPath();
 
@@ -57,7 +56,7 @@ export class GridRenderer {
       }
     }
 
-    graphics.fill({ color: "#aaaaaa", alpha: 0.2 });
+    graphics.fill({ color: "#aaaaaa", alpha: 0.05 });
 
     graphics.beginPath();
     for (let i = 0; i <= constants.TOTAL_NOTES; i++) {

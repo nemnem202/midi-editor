@@ -37,19 +37,19 @@ export default class KeyboardController {
   ]);
 
   constructor(private deps: KeyboardControllerDeps) {
-    window.addEventListener("keydown", this.handleKeyboardEvents);
+    deps.parent.root.addEventListener("keydown", this.handleKeyboardEvents);
   }
 
   destroy() {
-    window.removeEventListener("keydown", this.handleKeyboardEvents);
+    this.deps.parent.root.removeEventListener("keydown", this.handleKeyboardEvents);
   }
 
   private handleKeyboardEvents = (e: KeyboardEvent) => {
     const key = this.normalizeShortcut(e);
     const action = this.shortcutMap.get(key);
-    console.log(key);
     if (action) {
       e.preventDefault();
+      e.stopPropagation();
       action();
     }
   };
