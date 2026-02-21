@@ -1,5 +1,5 @@
 import type { MidiObject, Note, Project } from "types/project";
-import { getMidiLength, getMidiLengthFromNotes } from "./lib/utils";
+import { getMidiLengthFromNotes } from "./lib/utils";
 
 export interface Command<TState> {
   execute(state: TState): TState;
@@ -181,6 +181,19 @@ export class ToggleMagnetismCommand implements Command<Project> {
     return {
       ...state,
       config: { ...state.config, magnetism: !state.config.magnetism },
+    };
+  }
+}
+
+export class TogglePlayCommand implements Command<Project> {
+  execute(state: Project): Project {
+    console.log("toggle play", state.config.isPlaying);
+    return {
+      ...state,
+      config: {
+        ...state.config,
+        isPlaying: !state.config.isPlaying,
+      },
     };
   }
 }

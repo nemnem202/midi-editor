@@ -21,6 +21,7 @@ import TracklistRenderer from "./renderers/tracklistRenderer";
 import KeyboardController from "./controllers/keyboardController";
 import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
 import { getNearestSubdivisionRoundedTick } from "./lib/utils";
+import SoundEngine from "./sound/sound-engine";
 
 const PIANO_KEYS_WIDTH = 100;
 const VELOCITY_ZONE_HEIGHT = 150;
@@ -43,6 +44,7 @@ export class NoteSprite extends Sprite {
 }
 
 export default class PianoRollEngine {
+  private soundEngine!: SoundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
   private engineProject: Project;
@@ -155,9 +157,11 @@ export default class PianoRollEngine {
     this.drawAllNotes();
 
     this.is_ready = true;
+
+    await this.getSoundEngine();
   };
 
-  setTracklistPos(pos: number) {
+  setTacklistPosFromUser(pos: number) {
     this.tracklistRenderer.updatePositionFromUser(pos);
   }
 
@@ -168,27 +172,40 @@ export default class PianoRollEngine {
       this.keyboardController.destroy();
     }
   }
+
   updateMidiData(newMidi: MidiObject) {
     this.engineMidiObject = newMidi;
     if (this.is_ready) {
       this.viewportController.updateMidiSize();
       this.drawAllNotes();
       this.drawAllGrids();
+      this.soundEngine.updateMidiObject(this.engineMidiObject);
     }
   }
+
   updateProjectData(newProject: Project) {
     const newConfig = newProject.config;
     const prevConfig = { ...this.project.config };
     this.engineProject = newProject;
-    if (newConfig.currentTracklistTick !== prevConfig.currentTracklistTick) {
-      this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
+    if (this.is_ready) {
+      if (newConfig.currentTracklistTick !== prevConfig.currentTracklistTick) {
+        this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
+      }
+      if (newConfig.gridSubdivisions !== prevConfig.gridSubdivisions) {
+        this.drawAllGrids();
+      }
+      if (newConfig.displayedTrackIndex !== prevConfig.displayedTrackIndex) {
+        this.drawAllNotes();
+      }
+      this.soundEngine.updateProject(this.engineProject);
     }
-    if (newConfig.gridSubdivisions !== prevConfig.gridSubdivisions) {
-      this.drawAllGrids();
-    }
-    if (newConfig.displayedTrackIndex !== prevConfig.displayedTrackIndex) {
-      this.drawAllNotes();
-    }
+  }
+
+  private async getSoundEngine() {
+    await SoundEngine.init(this.project, this.midiObject, (tick) =>
+      this.tracklistRenderer.updatePositionFromPlaying(tick),
+    );
+    this.soundEngine = SoundEngine.get();
   }
 
   private createArborescence() {

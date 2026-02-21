@@ -1,5 +1,5 @@
 import { useMidiContext } from "../midiProvider";
-import { ListMusic, Magnet, Play, Plus, Square } from "lucide-react";
+import { ListMusic, Magnet, Pause, Play, Plus, Square } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Field, FieldLabel } from "./ui/field";
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { ToggleMagnetismCommand, TogglePlayCommand } from "@/commands";
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
@@ -22,8 +23,20 @@ export default function ControlsPannel() {
     <div className="flex gap-5 min-h-15 flex-wrap">
       <ControlsSection>
         <>
-          <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent">
-            <Play className="stroke-primary fill-primary " />
+          <button
+            className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent"
+            onClick={() =>
+              setProject((prev) => ({
+                ...prev,
+                config: { ...prev.config, isPlaying: !prev.config.isPlaying },
+              }))
+            }
+          >
+            {project.config.isPlaying ? (
+              <Pause className="stroke-primary fill-primary " />
+            ) : (
+              <Play className="stroke-primary fill-primary " />
+            )}
           </button>
           <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent">
             <Square className="stroke-primary fill-primary" />
@@ -69,6 +82,7 @@ export default function ControlsPannel() {
         <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent">
           <Magnet
             className={` ${project.config.magnetism ? "stroke-chart-4" : "stroke-primary"}`}
+            onClick={() => setProject(new ToggleMagnetismCommand().execute)}
           />
         </button>
         <SubdivisionSelect />

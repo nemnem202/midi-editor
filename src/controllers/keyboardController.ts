@@ -132,7 +132,7 @@ export default class KeyboardController {
   }
 
   private setTracklistToStart() {
-    this.deps.parent.setTracklistPos(0);
+    this.deps.parent.setTacklistPosFromUser(0);
   }
 
   private toggleMagnetism() {
