@@ -12,14 +12,21 @@ interface SelectionDeps {
 
 export class SelectionController {
   private deps: SelectionDeps;
-  private selectionOrigin: { x: number; y: number } | null = null;
+  private selectionOrigin: { x: number; y: number; globalX: number; globalY: number } | null = null;
+
+  private startedToSelect = false;
 
   constructor(deps: SelectionDeps) {
     this.deps = deps;
   }
+
+  get _startedToSelect() {
+    return this.startedToSelect;
+  }
+
   updateSelectionOrigin(e: FederatedPointerEvent) {
     const pos = e.getLocalPosition(this.deps.notesGrid);
-    this.selectionOrigin = { x: pos.x, y: pos.y };
+    this.selectionOrigin = { x: pos.x, y: pos.y, globalX: e.globalX, globalY: e.globalY };
   }
 
   tryDrawSelection(e: FederatedPointerEvent) {
@@ -27,6 +34,15 @@ export class SelectionController {
 
     const { notesGrid, selectSquare } = this.deps;
     const pos = e.getLocalPosition(notesGrid);
+
+    if (
+      Math.abs(e.global.x - this.selectionOrigin.globalX) < 10 &&
+      Math.abs(e.global.y - this.selectionOrigin.globalY) < 10 &&
+      !this.startedToSelect
+    )
+      return;
+
+    this.startedToSelect = true;
 
     const rect = {
       x: Math.min(pos.x, this.selectionOrigin.x),
@@ -76,6 +92,7 @@ export class SelectionController {
 
     selectSquare.clear();
     this.selectionOrigin = null;
+    this.startedToSelect = false;
   }
 
   unselectAll() {

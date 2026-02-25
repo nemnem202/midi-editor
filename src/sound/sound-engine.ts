@@ -23,10 +23,10 @@ export default class SoundEngine {
 
   private static initTrackInstruments(): TrackInstruments {
     return {
-      piano: new PolySynth().toDestination(),
-      guitar: new PolySynth().toDestination(),
-      bass: new PolySynth().toDestination(),
-      drums: new PolySynth().toDestination(),
+      piano: new PolySynth({ maxPolyphony: 32 }).toDestination(),
+      guitar: new PolySynth({ maxPolyphony: 32 }).toDestination(),
+      bass: new PolySynth({ maxPolyphony: 32 }).toDestination(),
+      drums: new PolySynth({ maxPolyphony: 32 }).toDestination(),
     };
   }
 
@@ -42,6 +42,7 @@ export default class SoundEngine {
       SoundEngine.engine.updateMidiEvents();
     }
     SoundEngine.initialized = true;
+    console.log("sound engine init !");
   }
 
   public static get(): SoundEngine {
@@ -64,14 +65,15 @@ export default class SoundEngine {
     this.transport.cancel();
     this.parts.forEach((p) => p.dispose());
     this.parts = [];
-    this.transport.scheduleRepeat(() => {
-      this.onTickUpdate(this.transport.ticks);
-    }, "64n");
 
     this.midiObject.tracks.forEach((track, index) => {
       const synth = this.getInstrumentForTrack(index);
       if (synth) this.scheduleMidiEvents(track, synth);
     });
+  }
+
+  public get currentTicks(): number {
+    return this.transport.ticks;
   }
 
   private getInstrumentForTrack(index: number): PolySynth | null {
@@ -90,9 +92,13 @@ export default class SoundEngine {
   }
 
   private scheduleMidiEvents(track: Track, synth: PolySynth) {
-    const part = new Part((time, note) => {
-      synth.triggerAttackRelease(note.name, `${note.durationTicks}i`, time, note.velocity);
-    }, track.notes);
+    const part = new Part(
+      (time, note) => {
+        synth.triggerAttackRelease(note.name, `${note.durationTicks}i`, time, note.velocity);
+      },
+      track.notes.map((n) => ({ ...n, time: `${n.ticks}i` })),
+    );
+
     part.start(0);
     this.parts.push(part);
   }
@@ -118,19 +124,30 @@ export default class SoundEngine {
   }
 
   public play() {
+    this.releaseAllInstruments();
     this.transport.start();
   }
 
   public pause() {
     this.transport.pause();
+    this.releaseAllInstruments();
   }
 
   public reset() {
     this.transport.stop();
     this.transport.position = "0:0:0";
+    this.releaseAllInstruments();
   }
 
   public setTick(tick: number) {
     this.transport.position = `${tick}i`;
+  }
+
+  private releaseAllInstruments() {
+    Object.values(this.trackInstruments).forEach((synth) => {
+      if (synth instanceof PolySynth) {
+        synth.releaseAll();
+      }
+    });
   }
 }

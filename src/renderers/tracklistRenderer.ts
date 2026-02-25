@@ -37,6 +37,8 @@ export default class TracklistRenderer {
       this.tracklistPos,
       this.deps.engine.project.config.magnetism,
     );
+
+    this.deps.engine.soundEngine.setTick(this.deps.track.x);
   }
 
   updatePositionFromPlaying(value: number) {

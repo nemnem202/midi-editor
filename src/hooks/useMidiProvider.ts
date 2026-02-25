@@ -30,6 +30,7 @@ export default function useMidiProvider(props: MidiProviderProps) {
     const listenKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
       const currentMidi = midiRef.current;
+      console.log(key);
       if (!currentMidi) return;
       if (e.ctrlKey) {
         if (key === "z" && canUndo) {
@@ -38,6 +39,13 @@ export default function useMidiProvider(props: MidiProviderProps) {
         } else if (key === "y" && canRedo) {
           e.preventDefault();
           redo();
+        }
+      } else {
+        if (key === " ") {
+          setProject((prev) => ({
+            ...prev,
+            config: { ...prev.config, isPlaying: !prev.config.isPlaying },
+          }));
         }
       }
     };

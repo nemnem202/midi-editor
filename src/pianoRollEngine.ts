@@ -21,7 +21,8 @@ import TracklistRenderer from "./renderers/tracklistRenderer";
 import KeyboardController from "./controllers/keyboardController";
 import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
 import { getNearestSubdivisionRoundedTick } from "./lib/utils";
-import SoundEngine from "./sound/sound-engine";
+import _soundEngine from "./sound/sound-engine";
+import MenuRenderer from "./renderers/menuRenderer";
 
 const PIANO_KEYS_WIDTH = 100;
 const VELOCITY_ZONE_HEIGHT = 150;
@@ -44,7 +45,7 @@ export class NoteSprite extends Sprite {
 }
 
 export default class PianoRollEngine {
-  private soundEngine!: SoundEngine;
+  private _soundEngine!: _soundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
   private engineProject: Project;
@@ -97,6 +98,7 @@ export default class PianoRollEngine {
   private notesRenderer!: NotesRenderer;
   private layoutManager!: LayoutManager;
   private gridRenderer!: GridRenderer;
+  private menuRenderer!: MenuRenderer;
 
   constructor(
     root_div: HTMLDivElement,
@@ -128,6 +130,10 @@ export default class PianoRollEngine {
     return this.root_div;
   }
 
+  get soundEngine() {
+    return this._soundEngine;
+  }
+
   init = async () => {
     await this.app.init({
       backgroundAlpha: 0,
@@ -145,6 +151,7 @@ export default class PianoRollEngine {
     this.createLayoutManager();
     this.createTracklistRenderer();
     this.createPianoKeyboardRenderer();
+    this.createMenuRenderer();
 
     this.attachViewportController();
     this.attachSelectionController();
@@ -158,7 +165,14 @@ export default class PianoRollEngine {
 
     this.is_ready = true;
 
-    await this.getSoundEngine();
+    await this.get_soundEngine();
+
+    this.app.ticker.add(() => {
+      if (this.is_ready && this.project.config.isPlaying) {
+        const currentTick = this._soundEngine.currentTicks;
+        this.tracklistRenderer.updatePositionFromPlaying(currentTick);
+      }
+    });
   };
 
   setTacklistPosFromUser(pos: number) {
@@ -179,7 +193,7 @@ export default class PianoRollEngine {
       this.viewportController.updateMidiSize();
       this.drawAllNotes();
       this.drawAllGrids();
-      this.soundEngine.updateMidiObject(this.engineMidiObject);
+      this._soundEngine.updateMidiObject(this.engineMidiObject);
     }
   }
 
@@ -197,15 +211,15 @@ export default class PianoRollEngine {
       if (newConfig.displayedTrackIndex !== prevConfig.displayedTrackIndex) {
         this.drawAllNotes();
       }
-      this.soundEngine.updateProject(this.engineProject);
+      this._soundEngine.updateProject(this.engineProject);
     }
   }
 
-  private async getSoundEngine() {
-    await SoundEngine.init(this.project, this.midiObject, (tick) =>
+  private async get_soundEngine() {
+    await _soundEngine.init(this.project, this.midiObject, (tick) =>
       this.tracklistRenderer.updatePositionFromPlaying(tick),
     );
-    this.soundEngine = SoundEngine.get();
+    this._soundEngine = _soundEngine.get();
   }
 
   private createArborescence() {
@@ -262,6 +276,7 @@ export default class PianoRollEngine {
     };
 
     this.notes_grid_container.on("pointerdown", (e) => {
+      this.menuRenderer.clearMenu();
       if (alreadyClicked) {
         return addNote(e);
       } else {
@@ -279,9 +294,10 @@ export default class PianoRollEngine {
       }
     });
 
-    this.notes_grid_container.on("wheel", (e: FederatedWheelEvent) =>
-      this.viewportController.handleZoom(e),
-    );
+    this.notes_grid_container.on("wheel", (e: FederatedWheelEvent) => {
+      this.menuRenderer.clearMenu();
+      this.viewportController.handleZoom(e);
+    });
 
     this.notes_grid_container.on("globalpointermove", (e) => {
       this.selectionController.tryDrawSelection(e);
@@ -289,11 +305,15 @@ export default class PianoRollEngine {
     });
 
     this.notes_grid_container.on("pointerup", (e) => {
+      if (!this.selectionController._startedToSelect && e.button === 2) {
+        this.menuRenderer.drawMenu(e);
+      }
       document.body.style.cursor = "default";
       this.selectionController.finalize(e);
       this.panController.releaseLastDragPos();
     });
     this.notes_grid_container.on("pointerupoutside", (e) => {
+      this.menuRenderer.clearMenu();
       this.selectionController.finalize(e);
       this.panController.releaseLastDragPos();
     });
@@ -391,6 +411,10 @@ export default class PianoRollEngine {
       },
       piano_keys_container: this.piano_keys_container,
     });
+  };
+
+  private createMenuRenderer = () => {
+    this.menuRenderer = new MenuRenderer({ engine: this, app: this.app });
   };
 
   //////////////////////////

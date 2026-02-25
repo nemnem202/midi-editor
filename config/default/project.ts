@@ -25,6 +25,7 @@ const DEFAULT_PROJECT: Project = {
     isPlaying: false,
     magnetism: true,
     signature: [4, 4],
+    menuOpen: false,
   },
 };
 export default DEFAULT_PROJECT;

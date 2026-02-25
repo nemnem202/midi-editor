@@ -14,7 +14,7 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
         onContextMenu={(e) => e.preventDefault()}
       >
         <div className="absolute top-5 right-5 select-none">
-          <Button className="">Enregistrer</Button>
+          <Button className="">Save</Button>
         </div>
         <Title />
         <div className="w-full flex justify-between items-center">

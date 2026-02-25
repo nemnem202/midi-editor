@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { ToggleMagnetismCommand, TogglePlayCommand } from "@/commands";
+import { ToggleMagnetismCommand } from "@/commands";
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
@@ -86,6 +86,29 @@ export default function ControlsPannel() {
           />
         </button>
         <SubdivisionSelect />
+      </ControlsSection>
+      <ControlsSection>
+        <Field className="flex flex-row items-center justify-center  !w-min">
+          <FieldLabel htmlFor="style" className="!w-min text-muted-foreground text-xs">
+            style:
+          </FieldLabel>
+
+          <Select defaultValue="Blues">
+            <SelectTrigger className="w-full max-w-48 select-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup className="select-none">
+                <SelectLabel>Subdivisions</SelectLabel>
+                {["Blues", "Bossa Nova", "Rock", "Swing", "Reggae", "Classic", "Pop"].map((v) => (
+                  <SelectItem value={String(v)} key={v}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
       </ControlsSection>
     </div>
   );

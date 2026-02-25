@@ -32,6 +32,7 @@ export type Config = {
   magnetism: boolean;
   isPlaying: boolean;
   bpm: number;
+  menuOpen: boolean;
 };
 
 export interface Note extends NoteJSON {
