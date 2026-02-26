@@ -125,13 +125,17 @@ export class SelectNotesCommand implements Command<MidiObject> {
   }
 }
 export class SelectAllNotesCommand implements Command<MidiObject> {
+  constructor(private currentTrackindex: number) {}
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
+      tracks: state.tracks.map((track, trackIndex) => ({
         ...track,
 
-        notes: track.notes.map((n) => ({ ...n, isSelected: n.isInCurrentTrack })),
+        notes: track.notes.map((n) => ({
+          ...n,
+          isSelected: trackIndex === this.currentTrackindex,
+        })),
       })),
     };
   }
