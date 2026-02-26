@@ -114,7 +114,7 @@ export default function ControlsPannel() {
   );
 }
 
-function ControlsSection({ children }: { children: ReactNode }) {
+export function ControlsSection({ children }: { children: ReactNode }) {
   return (
     <div className="flex gap-2 w-fit h-15 px-5 bg-card rounded-xl items-center select-none">
       {children}

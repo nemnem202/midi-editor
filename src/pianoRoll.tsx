@@ -4,11 +4,17 @@ import { useMidiContext } from "./midiProvider";
 import usePianoRoll from "./hooks/usePianoRoll";
 import { Button } from "./components/ui/button";
 
-export default function PianoRollLoader({ children }: { children: ReactNode }) {
+export default function PianoRollLoader({
+  children,
+  hasClicked,
+  setClicked,
+}: {
+  children: ReactNode;
+  hasClicked: boolean;
+  setClicked: Dispatch<SetStateAction<boolean>>;
+}) {
   const ctx = useMidiContext();
   if (!ctx) return null;
-
-  const [hasClicked, setHasClicked] = useState(false);
 
   const { midiObject, project, setMidiObject, setProject, isLoading } = ctx;
 
@@ -27,7 +33,7 @@ export default function PianoRollLoader({ children }: { children: ReactNode }) {
         />
       ) : (
         <div className="size-full flex justify-center items-center">
-          <Button variant={"ghost"} onClick={() => setHasClicked(true)}>
+          <Button variant={"ghost"} onClick={() => setClicked(true)}>
             Start ?
           </Button>{" "}
         </div>

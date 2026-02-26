@@ -1,18 +1,12 @@
-import { Midi } from "@tonejs/midi";
-import { useHistoryState, type HistoryState } from "@uidotdev/usehooks";
+import { type HistoryState } from "@uidotdev/usehooks";
 import {
   createContext,
   useContext,
-  useEffect,
-  useRef,
-  useState,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
 } from "react";
 import type { MidiObject, Project } from "types/project";
-import { getMidiLength } from "./lib/utils";
-import Stats from "stats.js";
 import useMidiProvider from "./hooks/useMidiProvider";
 
 type MidiContextValues = {
