@@ -101,6 +101,18 @@ export default class PianoRollEngine {
   private gridRenderer!: GridRenderer;
   private menuRenderer!: MenuRenderer;
 
+  lastTouchedNote: Note = {
+    isInCurrentTrack: true,
+    duration: 2,
+    durationTicks: 200,
+    isSelected: true,
+    midi: 0,
+    name: "",
+    ticks: 0,
+    time: 2000,
+    velocity: 0.5,
+  };
+
   constructor(
     root_div: HTMLDivElement,
     midiObject: MidiObject,
@@ -259,8 +271,8 @@ export default class PianoRollEngine {
       const midi = 127 - Math.round(pos.y / rowHeight);
       const newNote: Note = {
         isInCurrentTrack: true,
-        duration: 2,
-        durationTicks: 200,
+        duration: this.lastTouchedNote.duration,
+        durationTicks: this.lastTouchedNote.durationTicks,
         isSelected: true,
         midi: midi,
         name: Midi(midi).toNote(),
@@ -270,11 +282,13 @@ export default class PianoRollEngine {
           pos.x,
           this.project.config.magnetism,
         ),
-        time: 2000,
-        velocity: 0.5,
+        time: this.lastTouchedNote.time,
+        velocity: this.lastTouchedNote.velocity,
       };
       alreadyClicked = false;
-      return this.triggerMidiCommand(new AddNotesCommand([newNote], 0));
+      return this.triggerMidiCommand(
+        new AddNotesCommand([newNote], this.project.config.displayedTrackIndex),
+      );
     };
 
     this.notes_grid_container.on("pointerdown", (e) => {

@@ -139,6 +139,7 @@ export class NotesRenderer {
             this.deps.engine.project.config.displayedTrackIndex,
           ),
         );
+        engine.lastTouchedNote = sprite.noteData;
         return;
       }
 
