@@ -10,6 +10,8 @@ import { Container, FederatedPointerEvent, Graphics, Texture } from "pixi.js";
 import type { MidiObject, Note } from "types/project";
 import { NoteSprite } from "../pianoRollEngine";
 
+const MIN_DURATION = 10;
+
 interface NotesRendererDeps {
   engine: PianoRollEngine;
   container: Container<NoteSprite>;
@@ -24,6 +26,7 @@ interface NotesRendererDeps {
 
 export class NotesRenderer {
   private deps: NotesRendererDeps;
+  private pool: NoteSprite[] = [];
 
   constructor(deps: NotesRendererDeps) {
     this.deps = deps;
@@ -32,55 +35,69 @@ export class NotesRenderer {
   draw() {
     const { container, midiObject, engine } = this.deps;
     const rowHeight = this.getRowHeight();
+    const currentTrackIndex = engine.project.config.displayedTrackIndex;
 
-    const allNotes = midiObject().tracks.flatMap((track, index) =>
+    // 1. Récupération des données sans cloner (pour garder les références)
+    const notesToDraw = midiObject().tracks.flatMap((track, index) =>
       track.notes.map((note) => ({
-        note: { ...note, isInCurrentTrack: index === engine.project.config.displayedTrackIndex },
+        note,
         channel: track.channel,
+        isCurrent: index === currentTrackIndex,
       })),
     );
 
-    allNotes.sort((a, b) => {
-      if (a.note.isSelected === b.note.isSelected && !a.note.isInCurrentTrack) return 0;
-      return a.note.isInCurrentTrack ? 1 : -1;
-    });
+    // 2. Tri : Sélectionnées en dernier pour être au premier plan
+    notesToDraw.sort((a, b) =>
+      a.note.isSelected === b.note.isSelected ? 0 : a.note.isSelected ? 1 : -1,
+    );
 
-    container.removeChildren().forEach((child) => child.destroy());
+    // 3. Pooling "En place" pour la performance
+    container.children.forEach((c) => (c.visible = false));
 
-    allNotes.forEach(({ note, channel }) => {
-      const sprite = new NoteSprite({ texture: Texture.WHITE });
+    notesToDraw.forEach(({ note, channel, isCurrent }, index) => {
+      let sprite: NoteSprite;
 
-      sprite.width = note.durationTicks;
-      sprite.height = rowHeight;
-      sprite.x = note.ticks;
-      sprite.y = (127 - note.midi) * rowHeight;
-      sprite.noteData = note;
-      sprite.eventMode = "static";
-      sprite.alpha = 1;
-      if (!note.isInCurrentTrack) {
-        sprite.alpha = 0.1;
-        sprite.eventMode = "none";
-        sprite.tint = colorFromValue(channel);
-        return container.addChild(sprite);
+      if (index < container.children.length) {
+        sprite = container.children[index];
+      } else {
+        sprite = this.pool.pop() || new NoteSprite(Texture.WHITE);
+        this.attachEvents(sprite);
+        container.addChild(sprite);
       }
 
+      // Mise à jour des propriétés physiques
+      sprite.visible = true;
+      sprite.noteData = note;
+      sprite.x = note.ticks;
+      sprite.y = (127 - note.midi) * rowHeight;
+      sprite.width = note.durationTicks;
+      sprite.height = rowHeight;
+
+      // Feedback visuel (Teinte et Opacité)
+      sprite.alpha = isCurrent ? 1 : 0.2;
+      sprite.eventMode = isCurrent ? "static" : "none";
+
+      // On utilise le TINT pour l'état sélectionné (Blanc-rougeâtre)
       if (note.isSelected) {
-        sprite.tint = "#ff0000";
+        sprite.tint = 0xff8888; // Un rouge clair pour bien voir la note
       } else {
         sprite.tint = colorFromValue(channel);
       }
 
-      this.attachEvents(sprite);
-      container.addChild(sprite);
+      // On stocke la durée pour le calcul de resize
+      (sprite as any).tempDuration = note.durationTicks;
     });
+
+    // Nettoyage pool
+    while (container.children.length > notesToDraw.length) {
+      const unused = container.removeChildAt(container.children.length - 1);
+      unused.visible = false;
+      this.pool.push(unused);
+    }
   }
 
-  private getRowHeight() {
-    return this.deps.appScreen.height / this.deps.constants.TOTAL_NOTES;
-  }
-
-  private attachEvents(graphic: NoteSprite) {
-    const { notesGrid, triggerMidiCommand } = this.deps;
+  private attachEvents(sprite: NoteSprite) {
+    const { notesGrid, triggerMidiCommand, engine } = this.deps;
 
     const state = {
       initialStates: null as Map<NoteSprite, { x: number; y: number; duration: number }> | null,
@@ -88,121 +105,45 @@ export class NotesRenderer {
       behavior: null as "leftResize" | "rightResize" | "move" | null,
     };
 
-    const HANDLE_SIZE = 15;
-    const MIN_DURATION = 10;
+    // --- HELPERS ---
+    const getLocalX = (e: FederatedPointerEvent) => notesGrid.toLocal(e.global).x;
 
-    const getMouseX = (e: FederatedPointerEvent) => notesGrid.toLocal(e.global).x;
+    const getHandleSizeTicks = () => {
+      // On veut que la poignée fasse 12 pixels ÉCRAN, peu importe le zoom
+      return 12 / notesGrid.scale.x;
+    };
 
-    const getZone = (e: FederatedPointerEvent): typeof state.behavior => {
-      const x = getMouseX(e);
-      const isLargEnought = this.deps.notesGrid.scale.x * graphic.noteData.durationTicks > 60;
-      if (x > graphic.x + graphic.noteData.durationTicks - HANDLE_SIZE && isLargEnought)
-        return "rightResize";
-      if (x < graphic.x + HANDLE_SIZE && isLargEnought) return "leftResize";
+    const getBehavior = (e: FederatedPointerEvent): typeof state.behavior => {
+      const hSize = getHandleSizeTicks();
+      const localX = getLocalX(e);
+      const relX = localX - sprite.x;
+
+      // Si la note est trop petite à l'écran, on ne permet que le move
+      if (sprite.width * notesGrid.scale.x < 30) return "move";
+
+      if (relX < hSize) return "leftResize";
+      if (relX > sprite.noteData.durationTicks - hSize) return "rightResize";
       return "move";
     };
 
-    const updateCursor = (behavior: typeof state.behavior) => {
-      const cursorMap = {
-        leftResize: "w-resize",
-        rightResize: "e-resize",
-        move: "move",
-      };
-      const newCursor = behavior ? cursorMap[behavior] : "pointer";
-      graphic.cursor = newCursor;
-      if (state.behavior) document.body.style.cursor = newCursor;
-    };
-
-    const handleMove = (dx: number, dy: number) => {
-      const rowHeight = this.getRowHeight();
-
-      let offsetDx = dx;
-      state.initialStates?.forEach((init) => {
-        if (init.x + offsetDx < 0) offsetDx = offsetDx - init.x;
-      });
-
-      state.initialStates?.forEach((init, g) => {
-        g.x = getNearestSubdivisionRoundedTick(
-          this.deps.midiObject().header.ppq,
-          [1, 1],
-          init.x + offsetDx,
-          this.deps.engine.project.config.magnetism,
-        );
-        const rawY = init.y + dy;
-        g.y = Math.round(rawY / rowHeight) * rowHeight;
-      });
-    };
-
-    const handleResize = (dx: number) => {
-      const rowHeight = this.getRowHeight();
-      state.initialStates?.forEach((init, g) => {
-        let newDuration = init.duration;
-        if (state.behavior === "rightResize") {
-          newDuration = getNearestSubdivisionRoundedTick(
-            this.deps.midiObject().header.ppq,
-            [1, 1],
-            Math.max(MIN_DURATION, init.duration + dx),
-            this.deps.engine.project.config.magnetism,
-          );
-        } else {
-          newDuration = getNearestSubdivisionRoundedTick(
-            this.deps.midiObject().header.ppq,
-            [1, 1],
-            Math.max(MIN_DURATION, init.duration - dx),
-            this.deps.engine.project.config.magnetism,
-          );
-          g.x = getNearestSubdivisionRoundedTick(
-            this.deps.midiObject().header.ppq,
-            [1, 1],
-            init.x + (init.duration - newDuration),
-            this.deps.engine.project.config.magnetism,
-          );
-        }
-
-        (g as any).tempDuration = newDuration;
-        g.width = newDuration;
-      });
-    };
-
-    const finalize = () => {
-      if (!state.initialStates) return;
-
-      const rowHeight = this.getRowHeight();
-      const updates = Array.from(state.initialStates.entries()).map(([g]) => ({
-        note: g.noteData,
-        ticks: g.x,
-        midi: 127 - Math.round(g.y / rowHeight),
-        durationTicks: (g as any).tempDuration || g.noteData.durationTicks,
-      }));
-
-      triggerMidiCommand(new UpdateNotesCommand(updates));
-
-      state.initialStates = null;
-      state.startMousePos = null;
-      state.behavior = null;
-      document.body.style.cursor = "default";
-    };
-
-    graphic.on("rightclick", (e) => {
-      e.stopPropagation();
-      triggerMidiCommand(new DeleteNoteCommand(graphic.noteData));
-    });
-
-    graphic.on("pointerdown", (e) => {
+    // --- HANDLERS ---
+    sprite.on("pointerdown", (e) => {
       if (e.button === 2 || e.altKey) return;
       e.stopPropagation();
 
-      if (!graphic.noteData.isSelected) {
-        triggerMidiCommand(new SelectNotesCommand([graphic.noteData]));
+      // Sélection immédiate si pas déjà sélectionnée
+      if (!sprite.noteData.isSelected) {
+        triggerMidiCommand(new SelectNotesCommand([sprite.noteData]));
         return;
       }
 
-      state.behavior = getZone(e);
+      state.behavior = getBehavior(e);
       state.startMousePos = notesGrid.toLocal(e.global);
       state.initialStates = new Map();
 
+      // Capturer l'état de tout le groupe sélectionné
       this.deps.container.children.forEach((child) => {
-        if (child.noteData.isSelected) {
+        if (child.visible && child.noteData.isSelected) {
           state.initialStates!.set(child, {
             x: child.x,
             y: child.y,
@@ -210,31 +151,104 @@ export class NotesRenderer {
           });
         }
       });
-      updateCursor(state.behavior);
     });
 
-    graphic.on("globalpointermove", (e) => {
+    sprite.on("globalpointermove", (e) => {
       if (!state.initialStates || !state.startMousePos) {
-        updateCursor(getZone(e));
+        const b = getBehavior(e);
+        sprite.cursor = b === "move" ? "move" : "ew-resize";
         return;
       }
 
-      const currentPos = notesGrid.toLocal(e.global);
-      const dx = currentPos.x - state.startMousePos.x;
-      const dy = currentPos.y - state.startMousePos.y;
+      const mouse = notesGrid.toLocal(e.global);
+      const rawDx = mouse.x - state.startMousePos.x;
+      const rawDy = mouse.y - state.startMousePos.y;
 
-      if (state.behavior === "move") handleMove(dx, dy);
-      else handleResize(dx);
-    });
+      const rowH = this.getRowHeight();
+      const ppq = engine.midiObject.header.ppq;
+      const magnetism = engine.project.config.magnetism;
 
-    graphic.on("pointerup", finalize);
-    graphic.on("pointerupoutside", finalize);
+      // 1. RÉCUPÉRER L'ÉTAT INITIAL DE LA NOTE MANIPULÉE (LE "TARGET")
+      const targetInit = state.initialStates.get(sprite)!;
 
-    graphic.on("pointerout", () => {
-      if (!state.behavior) {
-        graphic.cursor = "pointer";
-        document.body.style.cursor = "default";
+      // 2. CALCULER LE DELTA SNAPPÉ BASÉ UNIQUEMENT SUR LA NOTE CIBLE
+      let snappedDx = rawDx;
+      let snappedDDuration = rawDx;
+      let snappedDy = Math.round(rawDy / rowH) * rowH;
+
+      if (state.behavior === "move") {
+        const targetNewX = getNearestSubdivisionRoundedTick(
+          ppq,
+          [1, 1],
+          targetInit.x + rawDx,
+          magnetism,
+        );
+        snappedDx = targetNewX - targetInit.x;
+      } else if (state.behavior === "rightResize") {
+        const newDuration = Math.max(MIN_DURATION, targetInit.duration + rawDx);
+        const snappedDuration = getNearestSubdivisionRoundedTick(
+          ppq,
+          [1, 1],
+          newDuration,
+          magnetism,
+        );
+        snappedDDuration = snappedDuration - targetInit.duration;
+      } else if (state.behavior === "leftResize") {
+        const newX = getNearestSubdivisionRoundedTick(ppq, [1, 1], targetInit.x + rawDx, magnetism);
+        // On s'assure que le resize left ne dépasse pas la fin de la note
+        const clampedNewX = Math.min(newX, targetInit.x + targetInit.duration - MIN_DURATION);
+        snappedDx = clampedNewX - targetInit.x;
+        // Pour un resize left, le changement de durée est l'inverse du changement de position X
+        snappedDDuration = -snappedDx;
       }
+
+      // 3. APPLIQUER LE MÊME DELTA À TOUT LE GROUPE
+      state.initialStates.forEach((init, s) => {
+        if (state.behavior === "move") {
+          s.x = init.x + snappedDx;
+          s.y = init.y + snappedDy;
+        } else if (state.behavior === "rightResize") {
+          const newDur = Math.max(MIN_DURATION, init.duration + snappedDDuration);
+          s.width = newDur;
+          (s as any).tempDuration = newDur;
+        } else if (state.behavior === "leftResize") {
+          const newDur = Math.max(MIN_DURATION, init.duration + snappedDDuration);
+          s.x = init.x - (newDur - init.duration); // On déplace le X en fonction de l'accroissement de durée
+          s.width = newDur;
+          (s as any).tempDuration = newDur;
+        }
+      });
+
+      document.body.style.cursor = sprite.cursor ?? document.body.style.cursor;
     });
+
+    const finalize = () => {
+      if (!state.initialStates) return;
+
+      const updates = Array.from(state.initialStates.entries()).map(([s]) => ({
+        note: s.noteData,
+        ticks: s.x,
+        midi: 127 - Math.round(s.y / this.getRowHeight()),
+        durationTicks: (s as any).tempDuration || s.noteData.durationTicks,
+      }));
+
+      triggerMidiCommand(new UpdateNotesCommand(updates));
+
+      state.initialStates = null;
+      state.behavior = null;
+      document.body.style.cursor = "default";
+    };
+
+    sprite.on("pointerup", finalize);
+    sprite.on("pointerupoutside", finalize);
+
+    sprite.on("rightclick", (e) => {
+      e.stopPropagation();
+      triggerMidiCommand(new DeleteNoteCommand(sprite.noteData));
+    });
+  }
+
+  private getRowHeight() {
+    return this.deps.appScreen.height / this.deps.constants.TOTAL_NOTES;
   }
 }

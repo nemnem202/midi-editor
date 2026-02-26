@@ -69,7 +69,7 @@ export default function useMidiProvider(props: MidiProviderProps) {
           notes: track.notes.map((n) => ({
             ...n,
             isSelected: false,
-            isInCurrentTrack: index === 0,
+            isInCurrentTrack: index === project.config.displayedTrackIndex,
           })),
         })),
       };
