@@ -23,6 +23,7 @@ import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
 import { getNearestSubdivisionRoundedTick } from "./lib/utils";
 import _soundEngine from "./sound/sound-engine";
 import MenuRenderer from "./renderers/menuRenderer";
+import { Midi } from "tone";
 
 const PIANO_KEYS_WIDTH = 100;
 const VELOCITY_ZONE_HEIGHT = 150;
@@ -255,13 +256,14 @@ export default class PianoRollEngine {
       timeout && clearTimeout(timeout);
       const rowHeight = this.app.screen.height / TOTAL_NOTES;
       const pos = this.notes_grid_container.toLocal(e.global);
+      const midi = 127 - Math.round(pos.y / rowHeight);
       const newNote: Note = {
         isInCurrentTrack: true,
-        duration: 2000,
+        duration: 2,
         durationTicks: 200,
         isSelected: true,
-        midi: 127 - Math.round(pos.y / rowHeight),
-        name: "",
+        midi: midi,
+        name: Midi(midi).toNote(),
         ticks: getNearestSubdivisionRoundedTick(
           this.midiObject.header.ppq,
           [1, 1],
@@ -269,7 +271,7 @@ export default class PianoRollEngine {
           this.project.config.magnetism,
         ),
         time: 2000,
-        velocity: 100,
+        velocity: 0.5,
       };
       alreadyClicked = false;
       return this.triggerMidiCommand(new AddNotesCommand([newNote], 0));

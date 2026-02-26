@@ -1,4 +1,4 @@
-import { getTransport, Part, PolySynth, start } from "tone";
+import { getTransport, Midi, Part, PolySynth, start } from "tone";
 import type { MidiObject, Project, Track } from "types/project";
 
 interface TrackInstruments {
@@ -94,7 +94,13 @@ export default class SoundEngine {
   private scheduleMidiEvents(track: Track, synth: PolySynth) {
     const part = new Part(
       (time, note) => {
-        synth.triggerAttackRelease(note.name, `${note.durationTicks}i`, time, note.velocity);
+        console.log(note);
+        synth.triggerAttackRelease(
+          Midi(note.midi).toNote(),
+          `${note.durationTicks}i`,
+          time,
+          note.velocity,
+        );
       },
       track.notes.map((n) => ({ ...n, time: `${n.ticks}i` })),
     );
@@ -105,6 +111,7 @@ export default class SoundEngine {
 
   public updateMidiObject(newMidiObject: MidiObject) {
     if (this.midiObject.tracks !== newMidiObject.tracks) {
+      console.log("update midi object");
       this.midiObject = newMidiObject;
       this.updateMidiEvents();
     }
