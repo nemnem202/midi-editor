@@ -64,7 +64,7 @@ export default function useMidiProvider(props: MidiProviderProps) {
       };
       const midiObject = {
         ...initialMidiObject,
-        tracks: initialMidiObject.tracks.map((track, index) => ({
+        tracks: initialMidiObject.tracks.slice(0, 4).map((track, index) => ({
           ...track,
           notes: track.notes.map((n) => ({
             ...n,

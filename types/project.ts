@@ -3,6 +3,7 @@ import type { HeaderJSON } from "@tonejs/midi/dist/Header";
 import type { InstrumentJSON } from "@tonejs/midi/dist/Instrument";
 import type { NoteJSON } from "@tonejs/midi/dist/Note";
 import type { PitchBendJSON } from "@tonejs/midi/dist/PitchBend";
+
 export type People = {
   firstName: string;
   lastName: string;

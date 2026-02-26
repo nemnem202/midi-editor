@@ -108,16 +108,21 @@ export class DeleteSelectedNotesCommand implements Command<MidiObject> {
 }
 
 export class SelectNotesCommand implements Command<MidiObject> {
-  constructor(private notesToSelect: Note[]) {}
+  constructor(
+    private notesToSelect: Note[],
+    private currentTackIndex: number,
+  ) {}
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
+      tracks: state.tracks.map((track, trackIndex) => ({
         ...track,
         notes: track.notes.map((n) => ({
           ...n,
+          isInCurrentTrack: trackIndex === this.currentTackIndex,
           isSelected: this.notesToSelect.some(
-            (nt) => nt.ticks === n.ticks && nt.midi === n.midi && nt.isInCurrentTrack,
+            (nt) =>
+              nt.ticks === n.ticks && nt.midi === n.midi && trackIndex === this.currentTackIndex,
           ),
         })),
       })),

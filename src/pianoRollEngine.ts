@@ -443,6 +443,7 @@ export default class PianoRollEngine {
   };
   private attachSelectionController = () => {
     this.selectionController = new SelectionController({
+      engine: this,
       notesGrid: this.notes_grid_container,
       notesContainer: this.notes_container,
       selectSquare: this.select_square,

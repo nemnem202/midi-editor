@@ -133,7 +133,12 @@ export class NotesRenderer {
 
       // Sélection immédiate si pas déjà sélectionnée
       if (!sprite.noteData.isSelected) {
-        triggerMidiCommand(new SelectNotesCommand([sprite.noteData]));
+        triggerMidiCommand(
+          new SelectNotesCommand(
+            [sprite.noteData],
+            this.deps.engine.project.config.displayedTrackIndex,
+          ),
+        );
         return;
       }
 
