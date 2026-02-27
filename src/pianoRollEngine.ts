@@ -151,6 +151,10 @@ export default class PianoRollEngine {
     return this.project.config.displayedTrackIndex;
   }
 
+  get subdivision() {
+    return this.project.config.gridSubdivisions;
+  }
+
   init = async () => {
     await this.app.init({
       backgroundAlpha: 0,

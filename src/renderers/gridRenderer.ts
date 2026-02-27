@@ -1,7 +1,8 @@
 import type PianoRollEngine from "../pianoRollEngine";
-import { getSubdivisionTickInterval } from "../lib/utils";
+import { getSubdivisionTickInterval, grayFromScale } from "../lib/utils";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
+import { BINARY_SUBDIVISIONS } from "@/config/constants";
 
 interface GridRendererDeps {
   engine: PianoRollEngine;
@@ -24,7 +25,7 @@ export class GridRenderer {
   }
 
   draw() {
-    const { graphics, notesGrid, appScreen, midiObject, constants } = this.deps;
+    const { graphics, notesGrid, appScreen, midiObject, constants, engine } = this.deps;
 
     graphics.clear();
 
@@ -67,9 +68,20 @@ export class GridRenderer {
 
     const ppq = midiObject().header.ppq;
 
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [1, 1]), "#272727", 100);
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [2, 1]), "#2c2c2c", 100);
-    this.drawSubdivisions(getSubdivisionTickInterval(ppq, [4, 1]), "#555555", 100);
+    const currentSub = engine.subdivision[0] / engine.subdivision[1];
+    const subdivisionsToAdd = BINARY_SUBDIVISIONS.filter((sub) => sub[0] / sub[1] >= currentSub);
+    subdivisionsToAdd.sort((a, b) => a[0] / a[1] - b[0] / b[1]);
+    subdivisionsToAdd.forEach((s) => {
+      const colorFactor = Math.min(
+        3000,
+        (s[0] / s[1]) ** 2 * 200 * Math.min(notesGrid.scale.x, 5) + 1700,
+      );
+      this.drawSubdivisions(
+        getSubdivisionTickInterval(ppq, s),
+        grayFromScale(colorFactor),
+        s[0] === 4 ? 20 : 80,
+      );
+    });
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {

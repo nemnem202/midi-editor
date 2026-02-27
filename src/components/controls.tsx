@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { ToggleMagnetismCommand } from "@/commands";
+import { BINARY_SUBDIVISIONS } from "../config/constants";
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
@@ -124,17 +125,29 @@ export function ControlsSection({ children }: { children: ReactNode }) {
 
 function SubdivisionSelect() {
   const { project, setProject } = useMidiContext();
+
   return (
-    <Select defaultValue="4">
+    <Select
+      defaultValue={String(project.config.gridSubdivisions[1])}
+      onValueChange={(v) =>
+        setProject({
+          ...project,
+          config: {
+            ...project.config,
+            gridSubdivisions: BINARY_SUBDIVISIONS[Number(v)] as [number, number],
+          },
+        })
+      }
+    >
       <SelectTrigger className="w-full max-w-48 select-none">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup className="select-none">
           <SelectLabel>Subdivisions</SelectLabel>
-          {[1, 2, 4, 8, 16, 32, 64, 128].map((v) => (
-            <SelectItem value={String(v)} key={v}>
-              1/{v}
+          {BINARY_SUBDIVISIONS.map((sub, index) => (
+            <SelectItem value={String(index)} key={index}>
+              {sub[0]} / {sub[1]}
             </SelectItem>
           ))}
         </SelectGroup>
