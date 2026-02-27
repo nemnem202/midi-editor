@@ -89,9 +89,7 @@ export class SelectionController {
       }
     });
 
-    triggerMidiCommand(
-      new SelectNotesCommand(selected, this.deps.engine.project.config.displayedTrackIndex),
-    );
+    triggerMidiCommand(new SelectNotesCommand(selected, this.deps.engine.currentTrack));
 
     selectSquare.clear();
     this.selectionOrigin = null;

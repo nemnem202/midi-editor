@@ -33,7 +33,7 @@ const CORNER_RADIUS = 10;
 
 export class NoteSprite extends Sprite {
   noteData: Note = {
-    isInCurrentTrack: true,
+    track: 0,
     duration: 0,
     durationTicks: 0,
     isSelected: false,
@@ -102,7 +102,7 @@ export default class PianoRollEngine {
   private menuRenderer!: MenuRenderer;
 
   lastTouchedNote: Note = {
-    isInCurrentTrack: true,
+    track: 0,
     duration: 2,
     durationTicks: 200,
     isSelected: true,
@@ -145,6 +145,10 @@ export default class PianoRollEngine {
 
   get soundEngine() {
     return this._soundEngine;
+  }
+
+  get currentTrack() {
+    return this.project.config.displayedTrackIndex;
   }
 
   init = async () => {
@@ -269,8 +273,9 @@ export default class PianoRollEngine {
       const rowHeight = this.app.screen.height / TOTAL_NOTES;
       const pos = this.notes_grid_container.toLocal(e.global);
       const midi = 127 - Math.round(pos.y / rowHeight);
+      console.log("note added in track: ", this.currentTrack);
       const newNote: Note = {
-        isInCurrentTrack: true,
+        track: this.currentTrack,
         duration: this.lastTouchedNote.duration,
         durationTicks: this.lastTouchedNote.durationTicks,
         isSelected: true,
@@ -286,9 +291,7 @@ export default class PianoRollEngine {
         velocity: this.lastTouchedNote.velocity,
       };
       alreadyClicked = false;
-      return this.triggerMidiCommand(
-        new AddNotesCommand([newNote], this.project.config.displayedTrackIndex),
-      );
+      return this.triggerMidiCommand(new AddNotesCommand([newNote], this.currentTrack));
     };
 
     this.notes_grid_container.on("pointerdown", (e) => {

@@ -69,33 +69,34 @@ export default function useMidiProvider(props: MidiProviderProps) {
           notes: track.notes.map((n) => ({
             ...n,
             isSelected: false,
-            isInCurrentTrack: index === project.config.displayedTrackIndex,
+            track: index,
           })),
         })),
       };
+
       setMidiObject({ ...midiObject, durationInTicks: getMidiLength(midiObject) + 200 });
       setIsLoading(false);
     };
     loadMidi();
   }, []);
 
-  const trackPerfs = () => {
-    const stats = new Stats();
+  // const trackPerfs = () => {
+  //   const stats = new Stats();
 
-    stats.showPanel(0);
+  //   stats.showPanel(0);
 
-    document.body.appendChild(stats.dom);
+  //   document.body.appendChild(stats.dom);
 
-    function animate() {
-      stats.begin();
+  //   function animate() {
+  //     stats.begin();
 
-      stats.end();
+  //     stats.end();
 
-      requestAnimationFrame(animate);
-    }
+  //     requestAnimationFrame(animate);
+  //   }
 
-    requestAnimationFrame(animate);
-  };
+  //   requestAnimationFrame(animate);
+  // };
 
   return {
     isLoading,

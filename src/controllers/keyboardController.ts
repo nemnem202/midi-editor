@@ -68,9 +68,7 @@ export default class KeyboardController {
   }
 
   private selectAll() {
-    this.deps.triggerMidiCommand(
-      new SelectAllNotesCommand(this.deps.parent.project.config.displayedTrackIndex),
-    );
+    this.deps.triggerMidiCommand(new SelectAllNotesCommand(this.deps.parent.currentTrack));
   }
 
   private deleteSelected() {

@@ -12,7 +12,7 @@ import {
 const TRACKS = ["piano", "bass", "guitar", "drums"];
 
 export default function TrackSelect() {
-  const { project, midiObject, setProject, setMidiObject } = useMidiContext();
+  const { project, midiObject, setProject } = useMidiContext();
 
   if (!midiObject) return null;
 

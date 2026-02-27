@@ -1,4 +1,3 @@
-import type PianoRollEngine from "../pianoRollEngine";
 import type { Container, FederatedWheelEvent } from "pixi.js";
 import type { MidiObject } from "types/project";
 

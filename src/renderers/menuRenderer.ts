@@ -6,7 +6,6 @@ import {
   Application,
   Text,
   TextStyle,
-  Filter,
 } from "pixi.js";
 
 interface MenuRendererDeps {

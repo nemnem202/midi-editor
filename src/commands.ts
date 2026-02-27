@@ -28,7 +28,10 @@ export type NoteUpdateData = {
 };
 
 export class UpdateNotesCommand implements Command<MidiObject> {
-  constructor(private positions: NoteUpdateData[]) {}
+  constructor(
+    private positions: NoteUpdateData[],
+    private track: number,
+  ) {}
 
   execute(state: MidiObject): MidiObject {
     return {
@@ -40,10 +43,9 @@ export class UpdateNotesCommand implements Command<MidiObject> {
       tracks: state.tracks.map((track) => ({
         ...track,
         notes: track.notes.map((note) => {
-          // On cherche la mise à jour par correspondance de valeurs (Ticks/Midi originaux)
-          // car les références d'objets changent à cause du spread operator
           const update = this.positions.find(
-            (p) => p.note.ticks === note.ticks && p.note.midi === note.midi,
+            (p) =>
+              p.note.ticks === note.ticks && p.note.midi === note.midi && note.track === this.track,
           );
 
           if (update) {
@@ -115,14 +117,12 @@ export class SelectNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track, trackIndex) => ({
+      tracks: state.tracks.map((track) => ({
         ...track,
         notes: track.notes.map((n) => ({
           ...n,
-          isInCurrentTrack: trackIndex === this.currentTackIndex,
           isSelected: this.notesToSelect.some(
-            (nt) =>
-              nt.ticks === n.ticks && nt.midi === n.midi && trackIndex === this.currentTackIndex,
+            (nt) => nt.ticks === n.ticks && nt.midi === n.midi && n.track === this.currentTackIndex,
           ),
         })),
       })),
@@ -134,12 +134,12 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track, trackIndex) => ({
+      tracks: state.tracks.map((track) => ({
         ...track,
 
         notes: track.notes.map((n) => ({
           ...n,
-          isSelected: trackIndex === this.currentTrackindex,
+          isSelected: n.track === this.currentTrackindex,
         })),
       })),
     };

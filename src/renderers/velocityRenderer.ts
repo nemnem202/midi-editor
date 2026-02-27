@@ -27,7 +27,7 @@ export class VelocityRenderer {
 
     container.removeChildren().forEach((child) => child.destroy());
 
-    const notes = midiObject().tracks[engine.project.config.displayedTrackIndex].notes;
+    const notes = midiObject().tracks[engine.currentTrack].notes;
 
     const sortedNotes = [...notes].sort((a, b) => (a.isSelected ? 1 : -1));
 
