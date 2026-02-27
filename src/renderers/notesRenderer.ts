@@ -144,72 +144,95 @@ export class NotesRenderer {
       });
     });
 
-    sprite.on("globalpointermove", (e) => {
+    sprite.on("globalpointermove", (event) => {
       if (!state.initialStates || !state.startMousePos) {
-        const b = getBehavior(e);
-        sprite.cursor = b === "move" ? "move" : "ew-resize";
+        const interactionMode = getBehavior(event);
+        sprite.cursor = interactionMode === "move" ? "move" : "ew-resize";
         return;
       }
 
-      const mouse = notesGrid.toLocal(e.global);
-      const rawDx = mouse.x - state.startMousePos.x;
-      const rawDy = mouse.y - state.startMousePos.y;
+      const localMousePosition = notesGrid.toLocal(event.global);
 
-      const rowH = this.getRowHeight();
-      const ppq = engine.midiObject.header.ppq;
-      const magnetism = engine.project.config.magnetism;
+      const deltaX = localMousePosition.x - state.startMousePos.x;
+      const deltaY = localMousePosition.y - state.startMousePos.y;
 
-      const targetInit = state.initialStates.get(sprite)!;
+      const rowHeight = this.getRowHeight();
+      const ticksPerQuarter = engine.midiObject.header.ppq;
+      const snapStrength = engine.project.config.magnetism;
 
-      let snappedDx = rawDx;
-      let snappedDDuration = rawDx;
-      let snappedDy = Math.round(rawDy / rowH) * rowH;
+      const referenceState = state.initialStates.get(sprite)!;
+
+      let snappedOffsetX = deltaX;
+      let snappedDurationDelta = deltaX;
+      let snappedOffsetY = Math.round(deltaY / rowHeight) * rowHeight;
 
       if (state.behavior === "move") {
-        const targetNewX = getNearestSubdivisionRoundedTick(
-          ppq,
+        const snappedTargetTick = getNearestSubdivisionRoundedTick(
+          ticksPerQuarter,
           engine.subdivision,
-          targetInit.x + rawDx,
-          magnetism,
+          referenceState.x + deltaX,
+          snapStrength,
         );
-        snappedDx = targetNewX - targetInit.x;
+
+        snappedOffsetX = snappedTargetTick - referenceState.x;
       } else if (state.behavior === "rightResize") {
-        const newDuration = Math.max(MIN_DURATION, targetInit.duration + rawDx);
+        const proposedDuration = Math.max(MIN_DURATION, referenceState.duration + deltaX);
+
         const snappedDuration = getNearestSubdivisionRoundedTick(
-          ppq,
+          ticksPerQuarter,
           engine.subdivision,
-          newDuration,
-          magnetism,
+          proposedDuration,
+          snapStrength,
         );
-        snappedDDuration = snappedDuration - targetInit.duration;
+
+        snappedDurationDelta = snappedDuration - referenceState.duration;
       } else if (state.behavior === "leftResize") {
-        const newX = getNearestSubdivisionRoundedTick(
-          ppq,
+        const snappedStartTick = getNearestSubdivisionRoundedTick(
+          ticksPerQuarter,
           engine.subdivision,
-          targetInit.x + rawDx,
-          magnetism,
+          referenceState.x + deltaX,
+          snapStrength,
         );
 
-        const clampedNewX = Math.min(newX, targetInit.x + targetInit.duration - MIN_DURATION);
-        snappedDx = clampedNewX - targetInit.x;
+        const clampedStartTick = Math.min(
+          snappedStartTick,
+          referenceState.x + referenceState.duration - MIN_DURATION,
+        );
 
-        snappedDDuration = -snappedDx;
+        snappedOffsetX = clampedStartTick - referenceState.x;
+        snappedDurationDelta = -snappedOffsetX;
       }
 
-      state.initialStates.forEach((init, s) => {
-        if (s.noteData.track !== engine.currentTrack) return;
+      state.initialStates.forEach((initialNoteState) => {
+        if (initialNoteState.x + snappedOffsetX < 0) {
+          snappedOffsetX = -initialNoteState.x;
+        }
+      });
+
+      state.initialStates.forEach((initialNoteState, noteSprite) => {
+        if (noteSprite.noteData.track !== engine.currentTrack) return;
+
         if (state.behavior === "move") {
-          s.x = init.x + snappedDx;
-          s.y = init.y + snappedDy;
+          noteSprite.x = initialNoteState.x + snappedOffsetX;
+          noteSprite.y = initialNoteState.y + snappedOffsetY;
         } else if (state.behavior === "rightResize") {
-          const newDur = Math.max(MIN_DURATION, init.duration + snappedDDuration);
-          s.width = newDur;
-          (s as any).tempDuration = newDur;
+          const updatedDuration = Math.max(
+            MIN_DURATION,
+            initialNoteState.duration + snappedDurationDelta,
+          );
+
+          noteSprite.width = updatedDuration;
+          (noteSprite as any).tempDuration = updatedDuration;
         } else if (state.behavior === "leftResize") {
-          const newDur = Math.max(MIN_DURATION, init.duration + snappedDDuration);
-          s.x = init.x - (newDur - init.duration);
-          s.width = newDur;
-          (s as any).tempDuration = newDur;
+          const updatedDuration = Math.max(
+            MIN_DURATION,
+            initialNoteState.duration + snappedDurationDelta,
+          );
+
+          noteSprite.x = initialNoteState.x - (updatedDuration - initialNoteState.duration);
+
+          noteSprite.width = updatedDuration;
+          (noteSprite as any).tempDuration = updatedDuration;
         }
       });
 

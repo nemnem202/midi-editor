@@ -65,6 +65,7 @@ export default function useMidiProvider(props: MidiProviderProps) {
   useEffect(() => {
     const loadMidi = async () => {
       const midi = await Midi.fromUrl(project.midiFileUrl);
+
       const json = midi.toJSON();
       const initialMidiObject = {
         durationInTicks: midi.durationTicks,

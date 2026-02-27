@@ -1,7 +1,11 @@
+import { BINARY_SUBDIVISIONS } from "@/config/constants";
+import { getSubdivisionTickInterval, grayFromScale } from "@/lib/utils";
+import type PianoRollEngine from "@/pianoRollEngine";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface VelocityGridRendererDeps {
+  engine: PianoRollEngine;
   graphics: Graphics;
   notesGrid: Container;
   appScreen: { width: number; height: number };
@@ -20,7 +24,7 @@ export class VelocityGridRenderer {
   }
 
   draw() {
-    const { graphics, notesGrid, appScreen, midiObject, constants } = this.deps;
+    const { graphics, notesGrid, appScreen, midiObject, constants, engine } = this.deps;
 
     graphics.clear();
 
@@ -42,11 +46,23 @@ export class VelocityGridRenderer {
 
     const ppq = midiObject().header.ppq;
 
-    this.drawSub(ppq, "#333333", 100);
-    this.drawSub(ppq * 4, "#444444", 100);
+    const currentSub = engine.subdivision[0] / engine.subdivision[1];
+    const subdivisionsToAdd = BINARY_SUBDIVISIONS.filter((sub) => sub[0] / sub[1] >= currentSub);
+    subdivisionsToAdd.sort((a, b) => a[0] / a[1] - b[0] / b[1]);
+    subdivisionsToAdd.forEach((s) => {
+      const colorFactor = Math.min(
+        3000,
+        (s[0] / s[1]) ** 2 * 200 * Math.min(notesGrid.scale.x, 5) + 1700,
+      );
+      this.drawSubdivisions(
+        getSubdivisionTickInterval(ppq, s),
+        grayFromScale(colorFactor),
+        s[0] === 4 ? 20 : 80,
+      );
+    });
   }
 
-  private drawSub(tickStep: number, color: string, minGap: number) {
+  private drawSubdivisions(tickStep: number, color: string, minGap: number) {
     const { graphics, notesGrid, appScreen, midiObject, constants } = this.deps;
 
     const currentScaleX = notesGrid.scale.x;

@@ -34,7 +34,7 @@ export default function ControlsPannel() {
             }
           >
             {project.config.isPlaying ? (
-              <Pause className="stroke-primary fill-primary " />
+              <Pause className="stroke-chart-4 fill-chart-4 " />
             ) : (
               <Play className="stroke-primary fill-primary " />
             )}
@@ -67,6 +67,25 @@ export default function ControlsPannel() {
               defaultValue={project.config.signature[1]}
               className="!w-10 min-w-0 p-0 text-center"
             />
+            <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent !w-fit">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                className="lucide lucide-metronome-icon lucide-metronome"
+              >
+                <path d="M12 11.4V9.1" />
+                <path d="m12 17 6.59-6.59" />
+                <path d="m15.05 5.7-.218-.691a3 3 0 0 0-5.663 0L4.418 19.695A1 1 0 0 0 5.37 21h13.253a1 1 0 0 0 .951-1.31L18.45 16.2" />
+                <circle cx="20" cy="9" r="2" />
+              </svg>
+            </button>
           </Field>
         </>
       </ControlsSection>

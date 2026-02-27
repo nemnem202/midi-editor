@@ -67,9 +67,6 @@ export default class ViewportController {
   constrain() {
     const { notesGrid, midiObject, appScreen, constants } = this.deps;
 
-    notesGrid.x = Math.min(notesGrid.x, constants.PIANO_KEYS_WIDTH);
-    notesGrid.y = Math.min(notesGrid.y, 0);
-
     const contentWidth = midiObject().durationInTicks * notesGrid.scale.x;
 
     const minX = appScreen.width - contentWidth;
@@ -79,6 +76,9 @@ export default class ViewportController {
     const minY = appScreen.height - contentHeight;
 
     notesGrid.y = Math.max(notesGrid.y, minY - constants.VELOCITY_ZONE_HEIGHT);
+
+    notesGrid.x = Math.min(notesGrid.x, constants.PIANO_KEYS_WIDTH);
+    notesGrid.y = Math.min(notesGrid.y, 0);
   }
 
   updateMidiSize() {

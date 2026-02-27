@@ -82,7 +82,9 @@ export class LayoutManager {
 
     mainMask.clear().roundRect(0, 0, w, h, constants.CORNER_RADIUS).fill(0xffffff);
 
-    velocityBg
+    const scaleX = velocityContainer.scale.x || 1;
+
+    velocityMask
       .clear()
       .roundRect(
         constants.PIANO_KEYS_WIDTH,
@@ -91,16 +93,6 @@ export class LayoutManager {
         v_h,
         constants.CORNER_RADIUS,
       )
-      .stroke({ color: "#161616", alignment: 1, width: 1 });
-
-    const scaleX = velocityContainer.scale.x || 1;
-    const localWidth = (w - constants.PIANO_KEYS_WIDTH) / scaleX;
-
-    velocityMask
-      .clear()
-      // x=0 car le container est déjà positionné à PIANO_KEYS_WIDTH
-      // y=0 car le container est déjà positionné à la bonne hauteur
-      .roundRect(0, 0, localWidth, v_h, constants.CORNER_RADIUS)
       .fill(0xffffff);
   }
 

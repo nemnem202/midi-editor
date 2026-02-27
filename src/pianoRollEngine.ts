@@ -60,32 +60,36 @@ export default class PianoRollEngine {
   private piano_roll_container: Container = new Container({ eventMode: "passive" });
   private notes_container: Container<NoteSprite> = new Container<NoteSprite>({
     eventMode: "passive",
+    label: "notes_container",
   });
   private velocity_notes_container: Container<NoteSprite> = new Container<NoteSprite>({
     eventMode: "dynamic",
     hitArea: new Rectangle(0, 0, 100000, VELOCITY_ZONE_HEIGHT),
+    label: "velocity_notes_container",
   });
   private notes_grid_container: Container = new Container({
     x: PIANO_KEYS_WIDTH,
     cullableChildren: true,
     eventMode: "dynamic",
     hitArea: new Rectangle(0, 0, 100000, 100000),
+    label: "notes_grid_container",
   });
   private velocity_container: Container = new Container({
     x: PIANO_KEYS_WIDTH,
     height: VELOCITY_ZONE_HEIGHT - VELOCITY_ZONE_GAP,
     cullableChildren: true,
     eventMode: "static",
+    label: "velocity_container",
   });
 
-  private velocity_mask: Graphics = new Graphics({ eventMode: "passive" });
-  private piano_roll_bg: Graphics = new Graphics({ eventMode: "passive" });
-  private select_square: Graphics = new Graphics({ eventMode: "passive" });
-  private velocityGrid: Graphics = new Graphics({ eventMode: "passive" });
-  private velocity_bg: Graphics = new Graphics({ eventMode: "passive" });
-  private main_mask: Graphics = new Graphics({ eventMode: "passive" });
-  private tracklist: Graphics = new Graphics({ eventMode: "passive" });
-  private grid: Graphics = new Graphics({ eventMode: "passive" });
+  private velocity_mask: Graphics = new Graphics({ eventMode: "passive", label: "velocity_mask" });
+  private piano_roll_bg: Graphics = new Graphics({ eventMode: "passive", label: "piano_roll_bg" });
+  private select_square: Graphics = new Graphics({ eventMode: "passive", label: "select_square" });
+  private velocityGrid: Graphics = new Graphics({ eventMode: "passive", label: "velocityGrid" });
+  private velocity_bg: Graphics = new Graphics({ eventMode: "passive", label: "velocity_bg" });
+  private main_mask: Graphics = new Graphics({ eventMode: "passive", label: "main_mask" });
+  private tracklist: Graphics = new Graphics({ eventMode: "passive", label: "tracklist" });
+  private grid: Graphics = new Graphics({ eventMode: "passive", label: "grid" });
 
   private selectionController!: SelectionController;
   private viewportController!: ViewportController;
@@ -162,6 +166,8 @@ export default class PianoRollEngine {
       antialias: false,
     });
 
+    globalThis.__PIXI_APP__ = this.app;
+
     this.createArborescence();
     this.addListeners();
 
@@ -178,6 +184,8 @@ export default class PianoRollEngine {
     this.attachSelectionController();
     this.attachPanController();
     this.attachKeyboardController();
+
+    this.layoutManager.updateMask();
 
     this.drawKeys();
     this.drawAllGrids();
@@ -209,9 +217,14 @@ export default class PianoRollEngine {
   }
 
   updateMidiData(newMidi: MidiObject) {
+    const prevMidi = { ...this.engineMidiObject };
     this.engineMidiObject = newMidi;
     if (this.is_ready) {
-      this.viewportController.updateMidiSize();
+      if (prevMidi.durationInTicks !== newMidi.durationInTicks) {
+        this.viewportController.updateMidiSize();
+        console.log("size changed");
+      }
+
       this.drawAllNotes();
       this.drawAllGrids();
       this._soundEngine.updateMidiObject(this.engineMidiObject);
@@ -259,16 +272,14 @@ export default class PianoRollEngine {
 
     this.app.stage.addChild(this.main_mask);
     this.piano_roll_container.mask = this.main_mask;
-    // this.app.stage.addChild(this.velocity_mask);
-    // this.velocity_container.mask = this.velocity_mask;
+
+    this.app.stage.addChild(this.velocity_mask);
+    this.velocity_container.mask = this.velocity_mask;
 
     this.app.stage.addChild(this.piano_roll_container);
     this.app.stage.addChild(this.velocity_container);
     this.app.stage.addChild(this.piano_roll_bg);
     this.app.stage.addChild(this.velocity_bg);
-
-    this.velocity_container.addChild(this.velocity_mask);
-    this.velocity_container.mask = this.velocity_mask;
   }
 
   private addListeners = () => {
@@ -365,6 +376,7 @@ export default class PianoRollEngine {
   };
   private createVelocityGridRenderer = () => {
     this.velocityGridRenderer = new VelocityGridRenderer({
+      engine: this,
       graphics: this.velocityGrid,
       notesGrid: this.notes_grid_container,
       appScreen: this.app.screen,
@@ -438,7 +450,6 @@ export default class PianoRollEngine {
       piano_keys_container: this.piano_keys_container,
     });
   };
-
   private createMenuRenderer = () => {
     this.menuRenderer = new MenuRenderer({ engine: this, app: this.app });
   };
