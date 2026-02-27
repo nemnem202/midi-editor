@@ -32,7 +32,7 @@ export default class ViewportController {
     const isZoomIn = e.deltaY < 0;
     const factor = isZoomIn ? this.ZOOM_FACTOR : 1 / this.ZOOM_FACTOR;
 
-    if (e.shiftKey) {
+    if (e.ctrlKey) {
       notesGrid.scale.y = Math.min(
         Math.max(
           notesGrid.scale.y * factor,

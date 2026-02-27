@@ -196,7 +196,6 @@ export class ToggleMagnetismCommand implements Command<Project> {
 
 export class TogglePlayCommand implements Command<Project> {
   execute(state: Project): Project {
-    console.log("toggle play", state.config.isPlaying);
     return {
       ...state,
       config: {

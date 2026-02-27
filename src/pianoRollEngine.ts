@@ -259,13 +259,16 @@ export default class PianoRollEngine {
 
     this.app.stage.addChild(this.main_mask);
     this.piano_roll_container.mask = this.main_mask;
-    this.app.stage.addChild(this.velocity_mask);
-    this.velocity_container.mask = this.velocity_mask;
+    // this.app.stage.addChild(this.velocity_mask);
+    // this.velocity_container.mask = this.velocity_mask;
 
     this.app.stage.addChild(this.piano_roll_container);
     this.app.stage.addChild(this.velocity_container);
     this.app.stage.addChild(this.piano_roll_bg);
     this.app.stage.addChild(this.velocity_bg);
+
+    this.velocity_container.addChild(this.velocity_mask);
+    this.velocity_container.mask = this.velocity_mask;
   }
 
   private addListeners = () => {

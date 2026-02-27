@@ -68,7 +68,8 @@ export class LayoutManager {
   }
 
   updateMask() {
-    const { app, mainMask, velocityMask, pianoRollBg, velocityBg, constants } = this.deps;
+    const { app, mainMask, velocityMask, pianoRollBg, velocityBg, constants, velocityContainer } =
+      this.deps;
 
     const w = app.screen.width;
     const h = app.screen.height - constants.VELOCITY_ZONE_HEIGHT;
@@ -92,15 +93,14 @@ export class LayoutManager {
       )
       .stroke({ color: "#161616", alignment: 1, width: 1 });
 
+    const scaleX = velocityContainer.scale.x || 1;
+    const localWidth = (w - constants.PIANO_KEYS_WIDTH) / scaleX;
+
     velocityMask
       .clear()
-      .roundRect(
-        constants.PIANO_KEYS_WIDTH,
-        h + constants.VELOCITY_ZONE_GAP,
-        w - constants.PIANO_KEYS_WIDTH,
-        v_h,
-        constants.CORNER_RADIUS,
-      )
+      // x=0 car le container est déjà positionné à PIANO_KEYS_WIDTH
+      // y=0 car le container est déjà positionné à la bonne hauteur
+      .roundRect(0, 0, localWidth, v_h, constants.CORNER_RADIUS)
       .fill(0xffffff);
   }
 

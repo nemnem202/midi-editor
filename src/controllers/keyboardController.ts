@@ -83,7 +83,7 @@ export default class KeyboardController {
       }),
     );
     const offsetTicks = findFirstNoteTick(this.copyedNotes);
-    console.log(offsetTicks);
+
     this.copyedNotes = this.copyedNotes.map((note) => {
       note.ticks -= offsetTicks;
       return note;
@@ -91,7 +91,6 @@ export default class KeyboardController {
   }
 
   private paste() {
-    console.log(this.deps.parent.tracklistPos);
     const newNotes = this.copyedNotes.map((note) => ({
       ...note,
       isSelected: true,

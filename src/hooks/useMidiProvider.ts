@@ -30,7 +30,6 @@ export default function useMidiProvider(props: MidiProviderProps) {
     const listenKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
       const currentMidi = midiRef.current;
-      console.log(key);
       if (!currentMidi) return;
       if (e.ctrlKey) {
         if (key === "z" && canUndo) {
@@ -49,8 +48,18 @@ export default function useMidiProvider(props: MidiProviderProps) {
         }
       }
     };
+    const listenWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    };
+
     window.addEventListener("keydown", listenKeyDown);
-    return () => window.removeEventListener("keydown", listenKeyDown);
+    window.addEventListener("wheel", listenWheel, { passive: false });
+    return () => {
+      window.removeEventListener("keydown", listenKeyDown);
+      window.removeEventListener("wheel", listenWheel);
+    };
   }, [undo, redo, canUndo, canRedo]);
 
   useEffect(() => {

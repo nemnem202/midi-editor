@@ -55,7 +55,7 @@ export default function MidiEditor({ initProject }: { initProject: Project }) {
             <ControlsPannel />
             <TrackSelect />
           </div>
-          <div className="relative size-full">
+          <div className="relative size-full flex items-center justify-center">
             <div className="absolute top-0 right-0 m-3">
               <Button
                 variant={"outline"}

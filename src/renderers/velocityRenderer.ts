@@ -14,7 +14,7 @@ interface VelocityRendererDeps {
 
 export class VelocityRenderer {
   private deps: VelocityRendererDeps;
-
+  private pool: NoteSprite[] = [];
   private readonly HANDLE_WIDTH_PX = 5;
 
   constructor(deps: VelocityRendererDeps) {
@@ -24,33 +24,41 @@ export class VelocityRenderer {
 
   draw() {
     const { container, velocityContainer, midiObject, engine } = this.deps;
-
-    container.removeChildren().forEach((child) => child.destroy());
-
     const notes = midiObject().tracks[engine.currentTrack].notes;
 
     const sortedNotes = [...notes].sort((a, b) => (a.isSelected ? 1 : -1));
 
-    sortedNotes.forEach((note) => {
-      const sprite = new NoteSprite(Texture.WHITE);
+    container.children.forEach((c) => (c.visible = false));
+
+    sortedNotes.forEach((note, index) => {
+      let sprite: NoteSprite;
+
+      if (index < container.children.length) {
+        sprite = container.children[index];
+      } else {
+        sprite = this.pool.pop() || new NoteSprite(Texture.WHITE);
+        container.addChild(sprite);
+      }
 
       const vHeight = note.velocity * velocityContainer.height;
 
+      sprite.visible = true;
       sprite.x = note.ticks;
       sprite.y = velocityContainer.height - vHeight;
-
       sprite.width = this.HANDLE_WIDTH_PX / velocityContainer.scale.x;
       sprite.height = vHeight;
-
       sprite.tint = colorFromValue(note.midi);
       sprite.alpha = note.isSelected ? 1 : 0.2;
-
       sprite.eventMode = "static";
       sprite.noteData = note;
-      container.addChild(sprite);
     });
-  }
 
+    while (container.children.length > sortedNotes.length) {
+      const unused = container.removeChildAt(container.children.length - 1);
+      unused.visible = false;
+      this.pool.push(unused);
+    }
+  }
   updateWidth() {
     const scaleX = this.deps.velocityContainer.scale.x;
     this.deps.container.children.forEach((sprite) => {
@@ -105,7 +113,7 @@ export class VelocityRenderer {
         }));
 
       if (updates.length > 0) {
-        triggerMidiCommand(new UpdateNotesCommand(updates));
+        triggerMidiCommand(new UpdateNotesCommand(updates, this.deps.engine.currentTrack));
       }
       document.body.style.cursor = "default";
     };
