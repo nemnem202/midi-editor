@@ -287,7 +287,7 @@ export default class PianoRollEngine {
         name: Midi(midi).toNote(),
         ticks: getNearestSubdivisionRoundedTick(
           this.midiObject.header.ppq,
-          [1, 1],
+          this.subdivision,
           pos.x,
           this.project.config.magnetism,
         ),

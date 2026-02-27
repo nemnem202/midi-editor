@@ -168,7 +168,7 @@ export class NotesRenderer {
       if (state.behavior === "move") {
         const targetNewX = getNearestSubdivisionRoundedTick(
           ppq,
-          [1, 1],
+          engine.subdivision,
           targetInit.x + rawDx,
           magnetism,
         );
@@ -177,13 +177,18 @@ export class NotesRenderer {
         const newDuration = Math.max(MIN_DURATION, targetInit.duration + rawDx);
         const snappedDuration = getNearestSubdivisionRoundedTick(
           ppq,
-          [1, 1],
+          engine.subdivision,
           newDuration,
           magnetism,
         );
         snappedDDuration = snappedDuration - targetInit.duration;
       } else if (state.behavior === "leftResize") {
-        const newX = getNearestSubdivisionRoundedTick(ppq, [1, 1], targetInit.x + rawDx, magnetism);
+        const newX = getNearestSubdivisionRoundedTick(
+          ppq,
+          engine.subdivision,
+          targetInit.x + rawDx,
+          magnetism,
+        );
 
         const clampedNewX = Math.min(newX, targetInit.x + targetInit.duration - MIN_DURATION);
         snappedDx = clampedNewX - targetInit.x;

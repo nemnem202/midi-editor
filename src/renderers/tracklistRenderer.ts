@@ -33,7 +33,7 @@ export default class TracklistRenderer {
     }
     this.deps.track.x = getNearestSubdivisionRoundedTick(
       this.deps.engine.midiObject.header.ppq,
-      [1, 1],
+      this.deps.engine.subdivision,
       this.tracklistPos,
       this.deps.engine.project.config.magnetism,
     );
