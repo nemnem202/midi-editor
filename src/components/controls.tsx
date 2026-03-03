@@ -50,7 +50,9 @@ export default function ControlsPannel() {
             )}
           </button>
           <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent">
-            <Square className="stroke-primary fill-primary" />
+            <Square
+              className={` ${project.config.currentTracklistTick === 0 ? "fill-chart-4 stroke-chart-4" : "fill-primary stroke-primary"}`}
+            />
           </button>
           <Separator orientation="vertical" className="!h-6" />
           <Field className="flex flex-row items-center justify-center  !w-min">
@@ -118,7 +120,7 @@ export default function ControlsPannel() {
         <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent">
           <Magnet
             className={` ${project.config.magnetism ? "stroke-chart-4" : "stroke-primary"}`}
-            onClick={() => setProject(new ToggleMagnetismCommand().execute)}
+            onClick={() => setProject(new ToggleMagnetismCommand().execute(project))}
           />
         </button>
         <SubdivisionSelect />

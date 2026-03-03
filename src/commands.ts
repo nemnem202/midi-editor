@@ -213,3 +213,16 @@ export class SetPlayOrPauseCommand implements Command<Project> {
     };
   }
 }
+export class UpdateCurrentTickCommand implements Command<Project> {
+  constructor(private currentTracklistTick: number) {}
+
+  execute(state: Project): Project {
+    return {
+      ...state,
+      config: {
+        ...state.config,
+        currentTracklistTick: this.currentTracklistTick,
+      },
+    };
+  }
+}

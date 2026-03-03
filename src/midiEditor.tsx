@@ -8,6 +8,8 @@ import { Button } from "./components/ui/button";
 import { useState } from "react";
 import { Maximize, Minimize } from "lucide-react";
 
+// TODO : there is a bug after we toggled once in fullscreen when we hit pause
+
 export default function MidiEditor({ initProject }: { initProject: Project }) {
   const [fullScreen, setFullScreen] = useState(false);
   const [hasClicked, setClicked] = useState(false);

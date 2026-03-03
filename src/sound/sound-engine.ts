@@ -125,7 +125,6 @@ export default class SoundEngine {
     }
 
     if (this.project.config.bpm !== lastProject.config.bpm) {
-      console.log("bpm changed");
       this.transport.bpm.value = this.project.config.bpm;
     }
   }

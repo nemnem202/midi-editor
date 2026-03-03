@@ -4,6 +4,8 @@ import { colorFromValue } from "../lib/utils";
 import PianoRollEngine, { NoteSprite } from "../pianoRollEngine";
 import { UpdateNotesCommand, type Command, type NoteUpdateData } from "../commands";
 
+// TODO velocity notes are completely down
+
 interface VelocityRendererDeps {
   engine: PianoRollEngine;
   container: Container<NoteSprite>;
