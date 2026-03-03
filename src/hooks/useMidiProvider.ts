@@ -1,3 +1,4 @@
+import { MIN_MIDI_LENGTH_IN_QUARTER_NOTES } from "@/config/constants";
 import { getMidiLength } from "@/lib/utils";
 import type { MidiProviderProps } from "@/midiProvider";
 import { Midi } from "@tonejs/midi";
@@ -68,12 +69,13 @@ export default function useMidiProvider(props: MidiProviderProps) {
 
       const json = midi.toJSON();
       const initialMidiObject = {
-        durationInTicks: midi.durationTicks,
+        durationInTicks: Math.max(midi.durationTicks),
         header: json.header,
         tracks: json.tracks,
       };
-      const midiObject = {
+      const midiObject: MidiObject = {
         ...initialMidiObject,
+
         tracks: initialMidiObject.tracks.slice(0, 4).map((track, index) => ({
           ...track,
           notes: track.notes.map((n) => ({
@@ -84,7 +86,13 @@ export default function useMidiProvider(props: MidiProviderProps) {
         })),
       };
 
-      setMidiObject({ ...midiObject, durationInTicks: getMidiLength(midiObject) + 200 });
+      setMidiObject({
+        ...midiObject,
+        durationInTicks: Math.max(
+          MIN_MIDI_LENGTH_IN_QUARTER_NOTES * midi.header.ppq,
+          getMidiLength(midiObject) + 200,
+        ),
+      });
       setIsLoading(false);
     };
     loadMidi();

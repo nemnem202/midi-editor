@@ -45,9 +45,16 @@ export class NotesRenderer {
       })),
     );
 
-    notesToDraw.sort((a, b) =>
-      a.note.isSelected === b.note.isSelected ? 0 : a.note.isSelected ? 1 : -1,
-    );
+    notesToDraw.sort((a, b) => {
+      if (a.note.isSelected !== b.note.isSelected) {
+        return a.note.isSelected ? 1 : -1;
+      }
+      if (a.isCurrent !== b.isCurrent) {
+        return a.isCurrent ? 1 : -1;
+      }
+
+      return 0;
+    });
 
     container.children.forEach((c) => (c.visible = false));
 

@@ -11,4 +11,4 @@ export const BINARY_SUBDIVISIONS: [number, number][] = [
   [1, 128],
 ];
 
-BINARY_SUBDIVISIONS;
+export const MIN_MIDI_LENGTH_IN_QUARTER_NOTES = 4 * 16;

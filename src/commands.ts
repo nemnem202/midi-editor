@@ -4,7 +4,6 @@ import { getMidiLengthFromNotes } from "./lib/utils";
 export interface Command<TState> {
   execute(state: TState): TState;
 }
-
 export class DeleteNoteCommand implements Command<MidiObject> {
   constructor(private note: Note) {}
 
@@ -18,7 +17,6 @@ export class DeleteNoteCommand implements Command<MidiObject> {
     };
   }
 }
-
 export type NoteUpdateData = {
   note: Note;
   ticks?: number;
@@ -26,7 +24,6 @@ export type NoteUpdateData = {
   durationTicks?: number;
   velocity?: number;
 };
-
 export class UpdateNotesCommand implements Command<MidiObject> {
   constructor(
     private positions: NoteUpdateData[],
@@ -59,7 +56,8 @@ export class UpdateNotesCommand implements Command<MidiObject> {
     };
 
     const newDuration = Math.max(
-      getMidiLengthFromNotes(newState.tracks.flatMap((track) => track.notes)),
+      getMidiLengthFromNotes(newState.tracks.flatMap((track) => track.notes)) +
+        2 * state.header.ppq,
       state.durationInTicks,
     );
 
@@ -68,7 +66,6 @@ export class UpdateNotesCommand implements Command<MidiObject> {
     return { ...newState, durationInTicks: newDuration };
   }
 }
-
 export class MoveNotesCommand implements Command<MidiObject> {
   constructor(
     private ticks: number,
@@ -101,7 +98,6 @@ export class MoveNotesCommand implements Command<MidiObject> {
     };
   }
 }
-
 export class DeleteSelectedNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
@@ -113,7 +109,6 @@ export class DeleteSelectedNotesCommand implements Command<MidiObject> {
     };
   }
 }
-
 export class SelectNotesCommand implements Command<MidiObject> {
   constructor(
     private notesToSelect: Note[],
@@ -141,7 +136,6 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
       ...state,
       tracks: state.tracks.map((track) => ({
         ...track,
-
         notes: track.notes.map((n) => ({
           ...n,
           isSelected: n.track === this.currentTrackindex,
@@ -150,7 +144,6 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
     };
   }
 }
-
 export class UnSelectAllNotesCommand implements Command<MidiObject> {
   constructor(private excepted: Note[]) {}
   execute(state: MidiObject): MidiObject {
@@ -166,7 +159,6 @@ export class UnSelectAllNotesCommand implements Command<MidiObject> {
     };
   }
 }
-
 export class AddNotesCommand implements Command<MidiObject> {
   constructor(
     private notes: Note[],
@@ -185,11 +177,10 @@ export class AddNotesCommand implements Command<MidiObject> {
           notes: track.notes.concat(this.notes),
         };
       }),
-      durationInTicks: Math.max(getMidiLengthFromNotes(this.notes), state.durationInTicks),
+      durationInTicks: Math.max(getMidiLengthFromNotes(this.notes) + 200, state.durationInTicks),
     };
   }
 }
-
 export class ToggleMagnetismCommand implements Command<Project> {
   execute(state: Project): Project {
     return {
@@ -198,7 +189,6 @@ export class ToggleMagnetismCommand implements Command<Project> {
     };
   }
 }
-
 export class TogglePlayCommand implements Command<Project> {
   execute(state: Project): Project {
     return {
