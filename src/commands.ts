@@ -1,6 +1,12 @@
-import type { MidiObject, Note, Project } from "types/project";
+import type { MidiObject, Note, Project, Signature } from "types/project";
 import { getMidiLengthFromNotes } from "./lib/utils";
-import { BINARY_SUBDIVISIONS, MAX_BPM, MIN_BPM } from "./config/constants";
+import {
+  BINARY_SUBDIVISIONS,
+  MAX_BPM,
+  MAX_SIGNATURE,
+  MIN_BPM,
+  MIN_SIGNATURE,
+} from "./config/constants";
 
 export interface Command<TState> {
   execute(state: TState): TState;
@@ -227,7 +233,6 @@ export class UpdateCurrentTickCommand implements Command<Project> {
     };
   }
 }
-
 export class ChangeBpmCommand implements Command<Project> {
   constructor(private bpm: number) {}
 
@@ -237,7 +242,6 @@ export class ChangeBpmCommand implements Command<Project> {
     return state;
   }
 }
-
 export class StopCommand implements Command<Project> {
   execute(state: Project): Project {
     return {
@@ -250,7 +254,6 @@ export class StopCommand implements Command<Project> {
     };
   }
 }
-
 export class ChangeGridSubdivisionCommand implements Command<Project> {
   constructor(private subIndex: number) {}
   execute(state: Project): Project {
@@ -263,10 +266,24 @@ export class ChangeGridSubdivisionCommand implements Command<Project> {
     };
   }
 }
-
 export class ChangeTrackIndexCommand implements Command<Project> {
   constructor(private trackindex: number) {}
   execute(state: Project): Project {
     return { ...state, config: { ...state.config, displayedTrackIndex: this.trackindex } };
+  }
+}
+export class ChangeSignatureCommand implements Command<Project> {
+  constructor(private sig: Signature) {}
+  execute(state: Project): Project {
+    return {
+      ...state,
+      config: {
+        ...state.config,
+        signature: [
+          Math.min(Math.max(MIN_SIGNATURE, this.sig[0]), MAX_SIGNATURE),
+          Math.min(Math.max(MIN_SIGNATURE, this.sig[1]), MAX_SIGNATURE),
+        ],
+      },
+    };
   }
 }

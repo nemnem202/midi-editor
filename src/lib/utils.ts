@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { MidiObject, Note } from "types/project";
+import type { MidiObject, Note, Signature } from "types/project";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -75,8 +75,12 @@ export function findFirstNoteTick(notes: Note[]): number {
   return ticks ?? 0;
 }
 
+// export function getSubdivisionTickInterval(ppq: number, resolution: [number, number]) {
+//   return (resolution[0] / resolution[1]) * ppq;
+// }
+
 export function getSubdivisionTickInterval(ppq: number, resolution: [number, number]) {
-  return (resolution[0] / resolution[1]) * ppq;
+  return (resolution[0] / resolution[1]) * ppq * 4;
 }
 
 export function getNearestSubdivisionRoundedTick(
@@ -90,4 +94,16 @@ export function getNearestSubdivisionRoundedTick(
   }
   const interval = getSubdivisionTickInterval(ppq, resolution);
   return Math.round(tick / interval) * interval;
+}
+
+export function arraysEqual(a: number[], b: number[]): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+
+  return true;
 }

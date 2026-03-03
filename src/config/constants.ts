@@ -1,6 +1,6 @@
 export const BINARY_SUBDIVISIONS: [number, number][] = [
-  [4, 1],
-  [2, 1],
+  // [4, 1],
+  // [2, 1],
   [1, 1],
   [1, 2],
   [1, 4],
@@ -16,3 +16,7 @@ export const MIN_MIDI_LENGTH_IN_QUARTER_NOTES = 4 * 16;
 export const MIN_BPM = 10;
 
 export const MAX_BPM = 500;
+
+export const MIN_SIGNATURE = 1;
+
+export const MAX_SIGNATURE = 20;

@@ -4,6 +4,8 @@ import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
 import { BINARY_SUBDIVISIONS } from "@/config/constants";
 
+// TODO the grid is not correct, 2/1 instead of 1/1
+
 interface GridRendererDeps {
   engine: PianoRollEngine;
   graphics: Graphics;
@@ -67,21 +69,28 @@ export class GridRenderer {
     graphics.stroke({ color: "#222222", width: 1, pixelLine: true });
 
     const ppq = midiObject().header.ppq;
-
+    const signature = engine.project.config.signature;
     const currentSub = engine.subdivision[0] / engine.subdivision[1];
     const subdivisionsToAdd = BINARY_SUBDIVISIONS.filter((sub) => sub[0] / sub[1] >= currentSub);
     subdivisionsToAdd.sort((a, b) => a[0] / a[1] - b[0] / b[1]);
+
+    const measureTicks = ppq * 4 * (signature[0] / signature[1]);
+
     subdivisionsToAdd.forEach((s) => {
+      if (s[0] / s[1] === 1) return;
       const colorFactor = Math.min(
         3000,
         (s[0] / s[1]) ** 2 * 200 * Math.min(notesGrid.scale.x, 5) + 1700,
       );
+
       this.drawSubdivisions(
         getSubdivisionTickInterval(ppq, s),
         grayFromScale(colorFactor),
         s[0] === 4 ? 20 : 80,
       );
     });
+
+    this.drawSubdivisions(measureTicks, "#ff00b3", 20);
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {

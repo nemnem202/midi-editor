@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Field, FieldLabel } from "./ui/field";
 import { Separator } from "./ui/separator";
-import type { ReactNode } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import {
   Select,
   SelectContent,
@@ -17,25 +17,49 @@ import {
 import {
   ChangeBpmCommand,
   ChangeGridSubdivisionCommand,
+  ChangeSignatureCommand,
   StopCommand,
   ToggleMagnetismCommand,
   TogglePlayCommand,
 } from "@/commands";
-import { BINARY_SUBDIVISIONS, MAX_BPM, MIN_BPM } from "../config/constants";
-
-// TODO do not update the state directly like this, use commands
+import {
+  BINARY_SUBDIVISIONS,
+  MAX_BPM,
+  MAX_SIGNATURE,
+  MIN_BPM,
+  MIN_SIGNATURE,
+} from "../config/constants";
+import type { Signature } from "types/project";
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
 
-  const handleBpmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBpmChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.currentTarget.value);
 
-    if (newValue < 0) e.currentTarget.value = String(project.config.bpm);
+    if (newValue < 0) return (e.currentTarget.value = String(project.config.bpm));
     if (newValue < MIN_BPM) e.currentTarget.value = String(MIN_BPM);
     if (newValue > MAX_BPM) e.currentTarget.value = String(MAX_BPM);
 
     setProject(new ChangeBpmCommand(newValue).execute(project));
+  };
+
+  const handleSignatureChange = (e: ChangeEvent<HTMLInputElement>, number: "top" | "bottom") => {
+    const newValue = parseInt(e.currentTarget.value);
+
+    if (newValue < 0) return (e.currentTarget.value = String(project.config.bpm));
+    if (newValue < MIN_SIGNATURE) e.currentTarget.value = String(MIN_BPM);
+    if (newValue > MAX_SIGNATURE) e.currentTarget.value = String(MAX_BPM);
+
+    const signature: Signature = [...project.config.signature];
+
+    if (number === "top") {
+      signature[0] = newValue;
+    } else {
+      signature[1] = newValue;
+    }
+
+    setProject(new ChangeSignatureCommand(signature).execute(project));
   };
 
   return (
@@ -84,12 +108,14 @@ export default function ControlsPannel() {
               type="number"
               defaultValue={project.config.signature[0]}
               className="!w-10 min-w-0 p-0 text-center"
+              onBlur={(e) => handleSignatureChange(e, "top")}
             />
             <span className="!w-min">/</span>
             <Input
               type="number"
               defaultValue={project.config.signature[1]}
               className="!w-10 min-w-0 p-0 text-center"
+              onBlur={(e) => handleSignatureChange(e, "bottom")}
             />
             <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent !w-fit">
               <svg

@@ -20,7 +20,7 @@ import { LayoutManager } from "./renderers/layoutManager";
 import TracklistRenderer from "./renderers/tracklistRenderer";
 import KeyboardController from "./controllers/keyboardController";
 import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
-import { getNearestSubdivisionRoundedTick } from "./lib/utils";
+import { arraysEqual, getNearestSubdivisionRoundedTick } from "./lib/utils";
 import MenuRenderer from "./renderers/menuRenderer";
 import { Midi } from "tone";
 import SoundEngine from "./sound/sound-engine";
@@ -240,7 +240,10 @@ export default class PianoRollEngine {
       if (newConfig.currentTracklistTick !== prevConfig.currentTracklistTick) {
         this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
       }
-      if (newConfig.gridSubdivisions !== prevConfig.gridSubdivisions) {
+      if (
+        arraysEqual(newConfig.gridSubdivisions, prevConfig.gridSubdivisions) ||
+        arraysEqual(newConfig.signature, prevConfig.signature)
+      ) {
         this.drawAllGrids();
       }
       if (newConfig.displayedTrackIndex !== prevConfig.displayedTrackIndex) {
