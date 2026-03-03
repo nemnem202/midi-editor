@@ -12,3 +12,7 @@ export const BINARY_SUBDIVISIONS: [number, number][] = [
 ];
 
 export const MIN_MIDI_LENGTH_IN_QUARTER_NOTES = 4 * 16;
+
+export const MIN_BPM = 10;
+
+export const MAX_BPM = 500;

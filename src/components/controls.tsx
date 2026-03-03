@@ -15,10 +15,20 @@ import {
   SelectValue,
 } from "./ui/select";
 import { ToggleMagnetismCommand } from "@/commands";
-import { BINARY_SUBDIVISIONS } from "../config/constants";
+import { BINARY_SUBDIVISIONS, MAX_BPM, MIN_BPM } from "../config/constants";
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
+
+  const handleBpmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = parseInt(e.currentTarget.value);
+
+    if (newValue < 0) e.currentTarget.value = String(project.config.bpm);
+    if (newValue < MIN_BPM) e.currentTarget.value = String(MIN_BPM);
+    if (newValue > MAX_BPM) e.currentTarget.value = String(MAX_BPM);
+
+    setProject({ ...project, config: { ...project.config, bpm: newValue } });
+  };
 
   return (
     <div className="flex gap-5 min-h-15 flex-wrap">
@@ -51,6 +61,12 @@ export default function ControlsPannel() {
               id="bpm"
               type="number"
               defaultValue={project.config.bpm}
+              onKeyDownCapture={(e) => {
+                if (e.key.toLowerCase() === "enter") {
+                  e.currentTarget.blur();
+                }
+              }}
+              onBlur={handleBpmChange}
               className="!w-15 min-w-0 p-0 text-center"
             />
           </Field>
