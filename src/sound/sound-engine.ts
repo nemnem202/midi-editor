@@ -15,6 +15,8 @@ export default class SoundEngine {
   private trackInstruments: TrackInstruments = SoundEngine.initTrackInstruments();
   private parts: Part[] = [];
 
+  private startingTick = 0;
+
   private constructor(
     private project: Project,
     private midiObject: MidiObject,
@@ -133,18 +135,23 @@ export default class SoundEngine {
   }
 
   public pause() {
+    this.transport.position = `${this.startingTick}i`;
     this.transport.pause();
     this.releaseAllInstruments();
+    this.onTickUpdate(this.startingTick);
   }
 
   public reset() {
     this.transport.stop();
     this.transport.position = "0:0:0";
+    this.startingTick = 0;
     this.releaseAllInstruments();
+    this.onTickUpdate(0);
   }
 
-  public setTick(tick: number) {
-    this.transport.position = `${tick}i`;
+  public setStartingTick(tick: number) {
+    this.startingTick = tick;
+    this.transport.position = `${this.startingTick}i`;
   }
 
   private releaseAllInstruments() {

@@ -1,3 +1,4 @@
+import { SetPlayOrPauseCommand, TogglePlayCommand } from "@/commands";
 import { getNearestSubdivisionRoundedTick } from "../lib/utils";
 import type PianoRollEngine from "../pianoRollEngine";
 import { FederatedPointerEvent, Graphics, type Container } from "pixi.js";
@@ -38,7 +39,8 @@ export default class TracklistRenderer {
       this.deps.engine.project.config.magnetism,
     );
 
-    this.deps.engine.soundEngine.setTick(this.deps.track.x);
+    this.deps.engine.soundEngine.setStartingTick(this.deps.track.x);
+    this.deps.engine.triggerProjectCommand(new SetPlayOrPauseCommand(false));
   }
 
   updatePositionFromPlaying(value: number) {

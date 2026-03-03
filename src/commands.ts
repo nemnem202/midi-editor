@@ -200,3 +200,16 @@ export class TogglePlayCommand implements Command<Project> {
     };
   }
 }
+export class SetPlayOrPauseCommand implements Command<Project> {
+  constructor(private play: boolean) {}
+
+  execute(state: Project): Project {
+    return {
+      ...state,
+      config: {
+        ...state.config,
+        isPlaying: this.play,
+      },
+    };
+  }
+}

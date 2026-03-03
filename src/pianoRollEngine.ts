@@ -21,9 +21,9 @@ import TracklistRenderer from "./renderers/tracklistRenderer";
 import KeyboardController from "./controllers/keyboardController";
 import PianoKeyboardRenderer from "./renderers/pianoKeyboardRenderer";
 import { getNearestSubdivisionRoundedTick } from "./lib/utils";
-import _soundEngine from "./sound/sound-engine";
 import MenuRenderer from "./renderers/menuRenderer";
 import { Midi } from "tone";
+import SoundEngine from "./sound/sound-engine";
 
 const PIANO_KEYS_WIDTH = 100;
 const VELOCITY_ZONE_HEIGHT = 150;
@@ -46,12 +46,12 @@ export class NoteSprite extends Sprite {
 }
 
 export default class PianoRollEngine {
-  private _soundEngine!: _soundEngine;
+  private _soundEngine!: SoundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
   private engineProject: Project;
-  private triggerMidiCommand: (command: Command<MidiObject>) => void;
-  private triggerProjectCommand: (command: Command<Project>) => void;
+  public triggerMidiCommand: (command: Command<MidiObject>) => void;
+  public triggerProjectCommand: (command: Command<Project>) => void;
 
   private root_div: HTMLDivElement;
   private app: Application = new Application();
@@ -166,6 +166,7 @@ export default class PianoRollEngine {
       antialias: false,
     });
 
+    //@ts-ignore
     globalThis.__PIXI_APP__ = this.app;
 
     this.createArborescence();
@@ -250,10 +251,10 @@ export default class PianoRollEngine {
   }
 
   private async get_soundEngine() {
-    await _soundEngine.init(this.project, this.midiObject, (tick) =>
+    await SoundEngine.init(this.project, this.midiObject, (tick) =>
       this.tracklistRenderer.updatePositionFromPlaying(tick),
     );
-    this._soundEngine = _soundEngine.get();
+    this._soundEngine = SoundEngine.get();
   }
 
   private createArborescence() {
