@@ -1,3 +1,4 @@
+import { ChangeTrackIndexCommand } from "@/commands";
 import { useMidiContext } from "../midiProvider";
 import {
   Select,
@@ -21,7 +22,7 @@ export default function TrackSelect() {
   const handleTrackChange = (v: string) => {
     const trackindex = TRACKS.findIndex((e) => e === v) ?? 0;
     if (project.config.displayedTrackIndex === trackindex) return;
-    setProject({ ...project, config: { ...project.config, displayedTrackIndex: trackindex } });
+    setProject(new ChangeTrackIndexCommand(trackindex).execute(project));
   };
 
   return (

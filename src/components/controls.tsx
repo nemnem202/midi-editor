@@ -14,8 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { ToggleMagnetismCommand } from "@/commands";
+import {
+  ChangeBpmCommand,
+  ChangeGridSubdivisionCommand,
+  StopCommand,
+  ToggleMagnetismCommand,
+  TogglePlayCommand,
+} from "@/commands";
 import { BINARY_SUBDIVISIONS, MAX_BPM, MIN_BPM } from "../config/constants";
+
+// TODO do not update the state directly like this, use commands
 
 export default function ControlsPannel() {
   const { project, setProject } = useMidiContext();
@@ -27,7 +35,7 @@ export default function ControlsPannel() {
     if (newValue < MIN_BPM) e.currentTarget.value = String(MIN_BPM);
     if (newValue > MAX_BPM) e.currentTarget.value = String(MAX_BPM);
 
-    setProject({ ...project, config: { ...project.config, bpm: newValue } });
+    setProject(new ChangeBpmCommand(newValue).execute(project));
   };
 
   return (
@@ -36,12 +44,7 @@ export default function ControlsPannel() {
         <>
           <button
             className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent"
-            onClick={() =>
-              setProject((prev) => ({
-                ...prev,
-                config: { ...prev.config, isPlaying: !prev.config.isPlaying },
-              }))
-            }
+            onClick={() => setProject(new TogglePlayCommand().execute(project))}
           >
             {project.config.isPlaying ? (
               <Pause className="stroke-chart-4 fill-chart-4 " />
@@ -49,7 +52,10 @@ export default function ControlsPannel() {
               <Play className="stroke-primary fill-primary " />
             )}
           </button>
-          <button className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent">
+          <button
+            className="all-unset cursor-pointer rounded-md p-2 hover:bg-accent"
+            onClick={() => setProject(new StopCommand().execute(project))}
+          >
             <Square
               className={` ${project.config.currentTracklistTick === 0 ? "fill-chart-4 stroke-chart-4" : "fill-primary stroke-primary"}`}
             />
@@ -167,13 +173,7 @@ function SubdivisionSelect() {
     <Select
       defaultValue={String(project.config.gridSubdivisions[1])}
       onValueChange={(v) =>
-        setProject({
-          ...project,
-          config: {
-            ...project.config,
-            gridSubdivisions: BINARY_SUBDIVISIONS[Number(v)] as [number, number],
-          },
-        })
+        setProject(new ChangeGridSubdivisionCommand(Number(v)).execute(project))
       }
     >
       <SelectTrigger className="w-full max-w-48 select-none">

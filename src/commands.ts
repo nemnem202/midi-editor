@@ -1,5 +1,6 @@
 import type { MidiObject, Note, Project } from "types/project";
 import { getMidiLengthFromNotes } from "./lib/utils";
+import { BINARY_SUBDIVISIONS, MAX_BPM, MIN_BPM } from "./config/constants";
 
 export interface Command<TState> {
   execute(state: TState): TState;
@@ -224,5 +225,48 @@ export class UpdateCurrentTickCommand implements Command<Project> {
         currentTracklistTick: this.currentTracklistTick,
       },
     };
+  }
+}
+
+export class ChangeBpmCommand implements Command<Project> {
+  constructor(private bpm: number) {}
+
+  execute(state: Project): Project {
+    if (this.bpm > MIN_BPM && this.bpm < MAX_BPM)
+      return { ...state, config: { ...state.config, bpm: this.bpm } };
+    return state;
+  }
+}
+
+export class StopCommand implements Command<Project> {
+  execute(state: Project): Project {
+    return {
+      ...state,
+      config: {
+        ...state.config,
+        isPlaying: false,
+        currentTracklistTick: 0,
+      },
+    };
+  }
+}
+
+export class ChangeGridSubdivisionCommand implements Command<Project> {
+  constructor(private subIndex: number) {}
+  execute(state: Project): Project {
+    return {
+      ...state,
+      config: {
+        ...state.config,
+        gridSubdivisions: BINARY_SUBDIVISIONS[this.subIndex] as [number, number],
+      },
+    };
+  }
+}
+
+export class ChangeTrackIndexCommand implements Command<Project> {
+  constructor(private trackindex: number) {}
+  execute(state: Project): Project {
+    return { ...state, config: { ...state.config, displayedTrackIndex: this.trackindex } };
   }
 }

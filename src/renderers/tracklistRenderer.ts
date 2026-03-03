@@ -41,13 +41,13 @@ export default class TracklistRenderer {
 
     this.deps.engine.soundEngine.setStartingTick(this.deps.track.x);
     this.deps.engine.triggerProjectCommand(new SetPlayOrPauseCommand(false));
-    this.deps.engine.triggerProjectCommand(new UpdateCurrentTickCommand(this.tracklistPos));
+    this.deps.engine.triggerProjectCommand(new UpdateCurrentTickCommand(this.deps.track.x));
   }
 
   updatePositionFromPlaying(value: number) {
     this.tracklistPos = value;
     this.deps.track.x = this.tracklistPos;
-    this.deps.engine.triggerProjectCommand(new UpdateCurrentTickCommand(this.tracklistPos));
+    this.deps.engine.triggerProjectCommand(new UpdateCurrentTickCommand(this.deps.track.x));
   }
   get tracklistPosition() {
     return this.tracklistPos;

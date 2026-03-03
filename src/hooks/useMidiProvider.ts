@@ -1,3 +1,4 @@
+import { TogglePlayCommand } from "@/commands";
 import { MIN_MIDI_LENGTH_IN_QUARTER_NOTES } from "@/config/constants";
 import { getMidiLength } from "@/lib/utils";
 import type { MidiProviderProps } from "@/midiProvider";
@@ -42,10 +43,7 @@ export default function useMidiProvider(props: MidiProviderProps) {
         }
       } else {
         if (key === " ") {
-          setProject((prev) => ({
-            ...prev,
-            config: { ...prev.config, isPlaying: !prev.config.isPlaying },
-          }));
+          setProject((prev) => new TogglePlayCommand().execute(prev));
         }
       }
     };
