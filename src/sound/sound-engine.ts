@@ -1,8 +1,9 @@
-import { getTransport, Midi, Part, PolySynth, start } from "tone";
+import { getTransport, Midi, Part, PolySynth, Sampler, start } from "tone";
 import type { MidiObject, Project, Track } from "types/project";
+import PianoOgg from "tonejs-instrument-piano-ogg";
 
 interface TrackInstruments {
-  piano: PolySynth;
+  piano: Sampler;
   guitar: PolySynth;
   bass: PolySynth;
   drums: PolySynth;
@@ -25,7 +26,7 @@ export default class SoundEngine {
 
   private static initTrackInstruments(): TrackInstruments {
     return {
-      piano: new PolySynth({ maxPolyphony: 32 }).toDestination(),
+      piano: new PianoOgg().toDestination(),
       guitar: new PolySynth({ maxPolyphony: 32 }).toDestination(),
       bass: new PolySynth({ maxPolyphony: 32 }).toDestination(),
       drums: new PolySynth({ maxPolyphony: 32 }).toDestination(),
@@ -77,7 +78,7 @@ export default class SoundEngine {
     return this.transport.ticks;
   }
 
-  private getInstrumentForTrack(index: number): PolySynth | null {
+  private getInstrumentForTrack(index: number): PolySynth | Sampler | null {
     switch (index) {
       case 0:
         return this.trackInstruments.piano;
@@ -92,7 +93,7 @@ export default class SoundEngine {
     }
   }
 
-  private scheduleMidiEvents(track: Track, synth: PolySynth) {
+  private scheduleMidiEvents(track: Track, synth: PolySynth | Sampler) {
     const part = new Part(
       (time, note) => {
         synth.triggerAttackRelease(
