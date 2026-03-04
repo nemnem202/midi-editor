@@ -63,3 +63,12 @@ export type Rect = {
   width: number;
   height: number;
 };
+
+export enum TrackOrder {
+  Piano,
+  Guitar,
+  Bass,
+  Drums,
+  Brass,
+  Reed,
+}

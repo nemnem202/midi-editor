@@ -1,5 +1,6 @@
 import { TogglePlayCommand } from "@/commands";
 import { MIN_MIDI_LENGTH_IN_QUARTER_NOTES } from "@/config/constants";
+import { rearrangeMidiFile } from "@/lib/midiconverter";
 import { getMidiLength } from "@/lib/utils";
 import type { MidiProviderProps } from "@/midiProvider";
 import { Midi } from "@tonejs/midi";
@@ -55,6 +56,7 @@ export default function useMidiProvider(props: MidiProviderProps) {
 
     window.addEventListener("keydown", listenKeyDown);
     window.addEventListener("wheel", listenWheel, { passive: false });
+
     return () => {
       window.removeEventListener("keydown", listenKeyDown);
       window.removeEventListener("wheel", listenWheel);
@@ -63,8 +65,8 @@ export default function useMidiProvider(props: MidiProviderProps) {
 
   useEffect(() => {
     const loadMidi = async () => {
-      const midi = await Midi.fromUrl(project.midiFileUrl);
-
+      let midi = await Midi.fromUrl(project.midiFileUrl);
+      midi = rearrangeMidiFile(midi);
       const json = midi.toJSON();
       const initialMidiObject = {
         durationInTicks: Math.max(midi.durationTicks),
@@ -95,24 +97,6 @@ export default function useMidiProvider(props: MidiProviderProps) {
     };
     loadMidi();
   }, []);
-
-  // const trackPerfs = () => {
-  //   const stats = new Stats();
-
-  //   stats.showPanel(0);
-
-  //   document.body.appendChild(stats.dom);
-
-  //   function animate() {
-  //     stats.begin();
-
-  //     stats.end();
-
-  //     requestAnimationFrame(animate);
-  //   }
-
-  //   requestAnimationFrame(animate);
-  // };
 
   return {
     isLoading,
