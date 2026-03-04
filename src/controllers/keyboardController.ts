@@ -106,28 +106,32 @@ export default class KeyboardController {
 
   private moveNoteUp(of: number = 1) {
     of = Math.max(of, 0);
-    if (
-      this.deps.parent.midiObject.tracks.find((track) =>
-        track.notes.find((note) => note.isSelected && note.midi + of > 127),
-      )
-    ) {
-      return;
-    } else {
-      this.deps.triggerMidiCommand(new MoveNotesCommand(0, of));
+    const maxMidiNote = this.deps.parent.midiObject.tracks
+      .flatMap((track) => track.notes)
+      .filter((n) => n.isSelected)
+      .reduce((max, n) => (n.midi > max ? n.midi : max), -Infinity);
+
+    if (maxMidiNote !== -Infinity) {
+      const maxAllowedDelta = 127 - maxMidiNote;
+      of = Math.min(of, maxAllowedDelta);
     }
+    this.deps.triggerMidiCommand(new MoveNotesCommand(0, of));
   }
 
   private moveNoteDown(of: number = 1) {
     of = Math.max(of, 0);
-    if (
-      this.deps.parent.midiObject.tracks.find((track) =>
-        track.notes.find((note) => note.isSelected && note.midi - of < 0),
-      )
-    ) {
-      return;
-    } else {
-      this.deps.triggerMidiCommand(new MoveNotesCommand(0, -of));
+
+    const minMidiNote = this.deps.parent.midiObject.tracks
+      .flatMap((track) => track.notes)
+      .filter((n) => n.isSelected)
+      .reduce((min, n) => (n.midi < min ? n.midi : min), Infinity);
+
+    if (minMidiNote !== Infinity) {
+      const maxAllowedDelta = minMidiNote;
+      of = Math.min(of, maxAllowedDelta);
     }
+
+    this.deps.triggerMidiCommand(new MoveNotesCommand(0, -of));
   }
 
   private setTracklistToStart() {

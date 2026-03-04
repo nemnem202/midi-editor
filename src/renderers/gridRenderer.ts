@@ -90,7 +90,7 @@ export class GridRenderer {
       );
     });
 
-    this.drawSubdivisions(measureTicks, "#ff00b3", 20);
+    this.drawSubdivisions(measureTicks, "#ff00b33a", 20);
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {

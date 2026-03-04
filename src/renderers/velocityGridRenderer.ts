@@ -45,21 +45,28 @@ export class VelocityGridRenderer {
     graphics.fill({ color: "#1a1a1a" });
 
     const ppq = midiObject().header.ppq;
-
+    const signature = engine.project.config.signature;
     const currentSub = engine.subdivision[0] / engine.subdivision[1];
     const subdivisionsToAdd = BINARY_SUBDIVISIONS.filter((sub) => sub[0] / sub[1] >= currentSub);
     subdivisionsToAdd.sort((a, b) => a[0] / a[1] - b[0] / b[1]);
+
+    const measureTicks = ppq * 4 * (signature[0] / signature[1]);
+
     subdivisionsToAdd.forEach((s) => {
+      if (s[0] / s[1] === 1) return;
       const colorFactor = Math.min(
         3000,
         (s[0] / s[1]) ** 2 * 200 * Math.min(notesGrid.scale.x, 5) + 1700,
       );
+
       this.drawSubdivisions(
         getSubdivisionTickInterval(ppq, s),
         grayFromScale(colorFactor),
         s[0] === 4 ? 20 : 80,
       );
     });
+
+    this.drawSubdivisions(measureTicks, "#ff00b33a", 20);
   }
 
   private drawSubdivisions(tickStep: number, color: string, minGap: number) {
