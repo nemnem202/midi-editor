@@ -3,6 +3,7 @@ import type { HeaderJSON } from "@tonejs/midi/dist/Header";
 import type { InstrumentJSON } from "@tonejs/midi/dist/Instrument";
 import type { NoteJSON } from "@tonejs/midi/dist/Note";
 import type { PitchBendJSON } from "@tonejs/midi/dist/PitchBend";
+import { Guitar } from "lucide-react";
 
 export type People = {
   firstName: string;
@@ -64,7 +65,7 @@ export type Rect = {
   height: number;
 };
 
-export enum TrackOrder {
+export enum TrackEnum {
   Piano,
   Guitar,
   Bass,
@@ -72,3 +73,12 @@ export enum TrackOrder {
   Brass,
   Reed,
 }
+
+export const TRACKS = [
+  TrackEnum.Piano,
+  TrackEnum.Guitar,
+  TrackEnum.Bass,
+  TrackEnum.Drums,
+  TrackEnum.Bass,
+  TrackEnum.Reed,
+];
