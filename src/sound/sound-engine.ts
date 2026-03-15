@@ -1,23 +1,19 @@
 import { getTransport, Midi, Part, PolySynth, Sampler, start } from "tone";
 import type { MidiObject, Project, Track } from "types/project";
-import PianoOgg from "tonejs-instrument-piano-ogg";
 
 interface TrackInstruments {
   piano: Sampler;
-  guitar: PolySynth;
-  bass: PolySynth;
-  drums: PolySynth;
+  guitar: Sampler;
+  bass: Sampler;
+  drums: Sampler;
 }
 
 export default class SoundEngine {
   private static engine: SoundEngine | null = null;
   private static initialized = false;
-
   private trackInstruments: TrackInstruments = SoundEngine.initTrackInstruments();
   private parts: Part[] = [];
-
   private startingTick = 0;
-
   private constructor(
     private project: Project,
     private midiObject: MidiObject,
@@ -26,10 +22,20 @@ export default class SoundEngine {
 
   private static initTrackInstruments(): TrackInstruments {
     return {
-      piano: new PianoOgg().toDestination(),
-      guitar: new PolySynth({ maxPolyphony: 32 }).toDestination(),
-      bass: new PolySynth({ maxPolyphony: 32 }).toDestination(),
-      drums: new PolySynth({ maxPolyphony: 32 }).toDestination(),
+      // piano: new PianoOgg().toDestination(),
+      // guitar: new GuitarAcousticOgg().toDestination(),
+      // bass: new BassElectricOgg().toDestination(),
+      // drums: new Sampler({
+      //   urls: {
+      //     C1: "kick.ogg",
+      //     D1: "snare.ogg",
+      //     E1: "hihat.ogg",
+      //     F1: "tom1.ogg",
+      //     G1: "tom2.ogg",
+      //     A1: "crash.ogg",
+      //   },
+      //   baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
+      // }).toDestination(),
     };
   }
 
