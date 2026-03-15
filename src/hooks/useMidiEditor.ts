@@ -1,13 +1,13 @@
 import type { Command } from "@/commands";
-import type { PianoRollProps } from "@/pianoRoll";
-import PianoRollEngine from "@/pianoRollEngine";
+import type { MidiEditorContainerProps } from "@/midiEditor";
+import MidiEditorContainerEngine from "@/midiEditorEngine";
 import { useEffect, useRef } from "react";
 import type { MidiObject, Project } from "types/project";
 
-export default function usePianoRoll(props: PianoRollProps) {
+export default function useMidiEditorContainer(props: MidiEditorContainerProps) {
   const { midiObject, setMidiObject, project, setProject } = props;
   const containerRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<PianoRollEngine | null>(null);
+  const engineRef = useRef<MidiEditorContainerEngine | null>(null);
   const midiRef = useRef(midiObject);
   const projectRef = useRef(project);
 
@@ -38,7 +38,7 @@ export default function usePianoRoll(props: PianoRollProps) {
 
   useEffect(() => {
     if (!containerRef.current || engineRef.current) return;
-    const engine = new PianoRollEngine(
+    const engine = new MidiEditorContainerEngine(
       containerRef.current,
       midiObject,
       (midiCommand) => midiCommandRef.current(midiCommand),

@@ -1,13 +1,13 @@
 import { Container, FederatedPointerEvent, Texture } from "pixi.js";
 import type { MidiObject } from "types/project";
 import { colorFromValue } from "../lib/utils";
-import PianoRollEngine, { NoteSprite } from "../pianoRollEngine";
+import MidiEditorContainerEngine, { NoteSprite } from "../midiEditorEngine";
 import { UpdateNotesCommand, type Command, type NoteUpdateData } from "../commands";
 
 // TODO velocity notes are completely down
 
 interface VelocityRendererDeps {
-  engine: PianoRollEngine;
+  engine: MidiEditorContainerEngine;
   container: Container<NoteSprite>;
   velocityContainer: Container;
   midiObject: () => MidiObject;

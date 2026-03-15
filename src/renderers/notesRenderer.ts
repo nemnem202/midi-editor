@@ -1,4 +1,4 @@
-import type PianoRollEngine from "../pianoRollEngine";
+import type MidiEditorContainerEngine from "../midiEditorEngine";
 import {
   DeleteNoteCommand,
   SelectNotesCommand,
@@ -8,12 +8,12 @@ import {
 import { colorFromValue, getNearestSubdivisionRoundedTick } from "../lib/utils";
 import { Container, FederatedPointerEvent, Texture } from "pixi.js";
 import type { MidiObject } from "types/project";
-import { NoteSprite } from "../pianoRollEngine";
+import { NoteSprite } from "../midiEditorEngine";
 
 const MIN_DURATION = 10;
 
 interface NotesRendererDeps {
-  engine: PianoRollEngine;
+  engine: MidiEditorContainerEngine;
   container: Container<NoteSprite>;
   notesGrid: Container;
   appScreen: { width: number; height: number };

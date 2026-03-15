@@ -45,7 +45,7 @@ export class NoteSprite extends Sprite {
   };
 }
 
-export default class PianoRollEngine {
+export default class MidiEditorContainerEngine {
   private _soundEngine!: SoundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
@@ -57,7 +57,7 @@ export default class PianoRollEngine {
   private app: Application = new Application();
 
   private piano_keys_container: Container = new Container({ eventMode: "passive" });
-  private piano_roll_container: Container = new Container({ eventMode: "passive" });
+  private midi_editor_container: Container = new Container({ eventMode: "passive" });
   private notes_container: Container<NoteSprite> = new Container<NoteSprite>({
     eventMode: "passive",
     label: "notes_container",
@@ -83,7 +83,10 @@ export default class PianoRollEngine {
   });
 
   private velocity_mask: Graphics = new Graphics({ eventMode: "passive", label: "velocity_mask" });
-  private piano_roll_bg: Graphics = new Graphics({ eventMode: "passive", label: "piano_roll_bg" });
+  private midi_editor_bg: Graphics = new Graphics({
+    eventMode: "passive",
+    label: "midi_editor_bg",
+  });
   private select_square: Graphics = new Graphics({ eventMode: "passive", label: "select_square" });
   private velocityGrid: Graphics = new Graphics({ eventMode: "passive", label: "velocityGrid" });
   private velocity_bg: Graphics = new Graphics({ eventMode: "passive", label: "velocity_bg" });
@@ -271,18 +274,18 @@ export default class PianoRollEngine {
     );
     this.velocity_container.addChild(this.velocityGrid, this.velocity_notes_container);
 
-    this.piano_roll_container.addChild(this.notes_grid_container);
-    this.piano_roll_container.addChild(this.piano_keys_container);
+    this.midi_editor_container.addChild(this.notes_grid_container);
+    this.midi_editor_container.addChild(this.piano_keys_container);
 
     this.app.stage.addChild(this.main_mask);
-    this.piano_roll_container.mask = this.main_mask;
+    this.midi_editor_container.mask = this.main_mask;
 
     this.app.stage.addChild(this.velocity_mask);
     this.velocity_container.mask = this.velocity_mask;
 
-    this.app.stage.addChild(this.piano_roll_container);
+    this.app.stage.addChild(this.midi_editor_container);
     this.app.stage.addChild(this.velocity_container);
-    this.app.stage.addChild(this.piano_roll_bg);
+    this.app.stage.addChild(this.midi_editor_bg);
     this.app.stage.addChild(this.velocity_bg);
   }
 
@@ -428,7 +431,7 @@ export default class PianoRollEngine {
       velocityContainer: this.velocity_container,
       mainMask: this.main_mask,
       velocityMask: this.velocity_mask,
-      pianoRollBg: this.piano_roll_bg,
+      midiEditorBg: this.midi_editor_bg,
       velocityBg: this.velocity_bg,
       midiObject: () => this.midiObject,
       constants: {

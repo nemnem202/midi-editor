@@ -1,4 +1,4 @@
-import type PianoRollEngine from "@/pianoRollEngine";
+import type MidiEditorContainerEngine from "@/midiEditorEngine";
 import {
   Graphics,
   Container,
@@ -9,7 +9,7 @@ import {
 } from "pixi.js";
 
 interface MenuRendererDeps {
-  engine: PianoRollEngine;
+  engine: MidiEditorContainerEngine;
   app: Application;
 }
 

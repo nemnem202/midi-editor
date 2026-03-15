@@ -1,9 +1,9 @@
-import type PianoRollEngine from "../pianoRollEngine";
+import type MidiEditorContainerEngine from "../midiEditorEngine";
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface LayoutDeps {
-  engine: PianoRollEngine;
+  engine: MidiEditorContainerEngine;
   app: Application;
   rootDiv: HTMLDivElement;
   notesGrid: Container;
@@ -11,7 +11,7 @@ interface LayoutDeps {
   velocityContainer: Container;
   mainMask: Graphics;
   velocityMask: Graphics;
-  pianoRollBg: Graphics;
+  midiEditorBg: Graphics;
   velocityBg: Graphics;
   midiObject: () => MidiObject;
   constants: {
@@ -68,14 +68,14 @@ export class LayoutManager {
   }
 
   updateMask() {
-    const { app, mainMask, velocityMask, pianoRollBg, velocityBg, constants, velocityContainer } =
+    const { app, mainMask, velocityMask, midiEditorBg, velocityBg, constants, velocityContainer } =
       this.deps;
 
     const w = app.screen.width;
     const h = app.screen.height - constants.VELOCITY_ZONE_HEIGHT;
     const v_h = constants.VELOCITY_ZONE_HEIGHT - constants.VELOCITY_ZONE_GAP;
 
-    pianoRollBg
+    midiEditorBg
       .clear()
       .roundRect(0, 0, w, h, constants.CORNER_RADIUS)
       .stroke({ color: "#161616", alignment: 1, width: 1 });

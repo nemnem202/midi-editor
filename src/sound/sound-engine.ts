@@ -22,20 +22,50 @@ export default class SoundEngine {
 
   private static initTrackInstruments(): TrackInstruments {
     return {
-      // piano: new PianoOgg().toDestination(),
-      // guitar: new GuitarAcousticOgg().toDestination(),
-      // bass: new BassElectricOgg().toDestination(),
-      // drums: new Sampler({
-      //   urls: {
-      //     C1: "kick.ogg",
-      //     D1: "snare.ogg",
-      //     E1: "hihat.ogg",
-      //     F1: "tom1.ogg",
-      //     G1: "tom2.ogg",
-      //     A1: "crash.ogg",
-      //   },
-      //   baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
-      // }).toDestination(),
+      piano: new Sampler({
+        urls: {
+          C1: "kick.ogg",
+          D1: "snare.ogg",
+          E1: "hihat.ogg",
+          F1: "tom1.ogg",
+          G1: "tom2.ogg",
+          A1: "crash.ogg",
+        },
+        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
+      }).toDestination(),
+      guitar: new Sampler({
+        urls: {
+          C1: "kick.ogg",
+          D1: "snare.ogg",
+          E1: "hihat.ogg",
+          F1: "tom1.ogg",
+          G1: "tom2.ogg",
+          A1: "crash.ogg",
+        },
+        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
+      }).toDestination(),
+      bass: new Sampler({
+        urls: {
+          C1: "kick.ogg",
+          D1: "snare.ogg",
+          E1: "hihat.ogg",
+          F1: "tom1.ogg",
+          G1: "tom2.ogg",
+          A1: "crash.ogg",
+        },
+        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
+      }).toDestination(),
+      drums: new Sampler({
+        urls: {
+          C1: "kick.ogg",
+          D1: "snare.ogg",
+          E1: "hihat.ogg",
+          F1: "tom1.ogg",
+          G1: "tom2.ogg",
+          A1: "crash.ogg",
+        },
+        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
+      }).toDestination(),
     };
   }
 

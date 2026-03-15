@@ -1,4 +1,4 @@
-import type PianoRollEngine from "../pianoRollEngine";
+import type MidiEditorContainerEngine from "../midiEditorEngine";
 import { getSubdivisionTickInterval, grayFromScale } from "../lib/utils";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
@@ -7,7 +7,7 @@ import { BINARY_SUBDIVISIONS } from "@/config/constants";
 // TODO the grid is not correct, 2/1 instead of 1/1
 
 interface GridRendererDeps {
-  engine: PianoRollEngine;
+  engine: MidiEditorContainerEngine;
   graphics: Graphics;
   notesGrid: Container;
   appScreen: { width: number; height: number };
