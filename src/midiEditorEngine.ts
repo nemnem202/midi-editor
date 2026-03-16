@@ -271,6 +271,9 @@ export default class MidiEditorEngine {
   private createArborescence() {
     this.root_div.appendChild(this.app.canvas);
 
+    this.app.stage.addChild(this.midi_editor_bg);
+    this.app.stage.addChild(this.velocity_bg);
+
     this.notes_grid_container.addChild(
       this.grid,
       this.notes_container,
@@ -279,26 +282,24 @@ export default class MidiEditorEngine {
     );
     this.velocity_container.addChild(this.velocityGrid, this.velocity_notes_container);
 
-    this.midi_editor_container.addChild(this.notes_grid_container);
-    this.midi_editor_container.addChild(this.piano_keys_container);
-
-    this.app.stage.addChild(this.main_mask);
-    this.midi_editor_container.mask = this.main_mask;
-
-    this.velocity_container.visible = this.strategy.showVelocity;
-    this.velocity_bg.visible = this.strategy.showVelocity;
-    this.tracklist.visible = this.strategy.showTracklist;
-
-    if (this.strategy.showVelocity) {
+    if (this.strategy.name === "classic") {
+      this.app.stage.addChild(this.main_mask);
       this.app.stage.addChild(this.velocity_mask);
+
+      // On masque la grille ET le piano
+      this.notes_grid_container.mask = this.main_mask;
+      this.piano_keys_container.mask = this.main_mask; // <--- FIX ICI
+
       this.velocity_container.mask = this.velocity_mask;
+    } else {
+      this.notes_grid_container.mask = null;
+      this.piano_keys_container.mask = null; // <--- Pas de masque en Piano Roll
+      this.velocity_container.mask = null;
     }
 
-    this.app.stage.addChild(this.midi_editor_container);
-    if (this.strategy.showVelocity) this.app.stage.addChild(this.velocity_container);
-
-    this.app.stage.addChild(this.midi_editor_bg);
-    if (this.strategy.showVelocity) this.app.stage.addChild(this.velocity_bg);
+    this.app.stage.addChild(this.notes_grid_container);
+    this.app.stage.addChild(this.velocity_container);
+    this.app.stage.addChild(this.piano_keys_container);
   }
   private addListeners = () => {
     let alreadyClicked = false;

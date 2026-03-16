@@ -1,4 +1,3 @@
-import { Rectangle } from "pixi.js";
 import type { Note } from "types/project";
 import type { EditorStrategy, NoteGeometry } from "./types";
 
@@ -48,15 +47,38 @@ export class PianoRollStrategy implements EditorStrategy {
   showVelocity = false;
   showTracklist = false;
 
-  getNoteGeometry(note: Note, rowHeight: number): NoteGeometry {
-    return {
-      x: note.ticks,
-      y: (127 - note.midi) * rowHeight,
-      width: note.durationTicks,
-      height: rowHeight,
-    };
+  private getXFromMidi(midi: number, keyWidth: number): number {
+    const whiteMidiOffsets = [0, 2, 4, 5, 7, 9, 11];
+    const octave = Math.floor(midi / 12);
+    const noteInOctave = midi % 12;
+
+    const whiteKeyIndexInOctave = whiteMidiOffsets.indexOf(noteInOctave);
+
+    if (whiteKeyIndexInOctave !== -1) {
+      const totalWhiteKeyIndex = octave * 7 + whiteKeyIndexInOctave;
+      return totalWhiteKeyIndex * keyWidth;
+    } else {
+      const prevWhiteKeyIndex = whiteMidiOffsets.findIndex((m) => m > noteInOctave) - 1;
+      const totalWhiteKeyIndex = octave * 7 + (prevWhiteKeyIndex === -2 ? 6 : prevWhiteKeyIndex);
+      return totalWhiteKeyIndex * keyWidth + keyWidth / 2;
+    }
   }
 
+  getNoteGeometry(note: Note, _rowHeight: number, keyWidth: number): NoteGeometry {
+    return {
+      x: this.getXFromMidi(note.midi, keyWidth),
+      y: note.ticks,
+      width:
+        note.midi % 12 === 1 ||
+        note.midi % 12 === 3 ||
+        note.midi % 12 === 6 ||
+        note.midi % 12 === 8 ||
+        note.midi % 12 === 10
+          ? keyWidth * 0.7
+          : keyWidth,
+      height: note.durationTicks,
+    };
+  }
   getKeyBounds(i: number, rowHeight: number, pianoWidth: number): NoteGeometry {
     return { x: 0, y: i * rowHeight, width: pianoWidth, height: rowHeight };
   }

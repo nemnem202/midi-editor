@@ -37,10 +37,19 @@ export class LayoutManager {
   }
 
   private resizeOnInit() {
-    const { app, notesGrid, velocityContainer, midiObject, constants, engine } = this.deps;
+    const { app, notesGrid, velocityContainer, midiObject, constants, engine, pianoKeysContainer } =
+      this.deps;
     const isPianoRoll = engine.strategy.name === "pianoroll";
 
     if (isPianoRoll) {
+      const availableHeight = app.screen.height - constants.PIANO_KEYS_WIDTH;
+      const initialScaleY = availableHeight / midiObject().durationInTicks;
+      notesGrid.scale.set(1, initialScaleY);
+      notesGrid.position.set(0, 0);
+      pianoKeysContainer.position.set(0, app.screen.height - constants.PIANO_KEYS_WIDTH);
+      pianoKeysContainer.scale.set(1, 1);
+
+      velocityContainer.visible = false;
     } else {
       const availableWidth = app.screen.width - constants.PIANO_KEYS_WIDTH;
 
@@ -63,9 +72,14 @@ export class LayoutManager {
       this.updateMask();
       this.updateHitbox();
 
-      this.deps.pianoKeysContainer.y = this.deps.notesGrid.y;
-
-      this.deps.pianoKeysContainer.scale.y = this.deps.notesGrid.scale.y;
+      // FIX ICI : Le piano ne suit la grille que si on est en mode vertical (Classic)
+      if (this.deps.engine.strategy.name === "classic") {
+        this.deps.pianoKeysContainer.y = this.deps.notesGrid.y;
+        this.deps.pianoKeysContainer.scale.y = this.deps.notesGrid.scale.y;
+      } else {
+        // En Piano Roll, on s'assure que le scale est réinitialisé à 1
+        this.deps.pianoKeysContainer.scale.set(1, 1);
+      }
 
       this.deps.onResize?.();
     });
@@ -78,21 +92,15 @@ export class LayoutManager {
     const w = app.screen.width;
     const h = app.screen.height;
 
-    midiEditorBg.clear();
-    mainMask.clear();
-    velocityBg.clear();
-    velocityMask.clear();
-
     if (isPianoRoll) {
-      // --- MASK PIANO ROLL ---
+      midiEditorBg.clear();
+      mainMask.clear();
+      velocityBg.clear();
+      velocityMask.clear();
       const gridHeight = h - constants.PIANO_KEYS_WIDTH;
-
-      midiEditorBg.roundRect(0, 0, w, h, constants.CORNER_RADIUS).fill({ color: "#1a1a1a" });
-
-      // Le masque de la grille s'arrête juste avant le piano en bas
-      mainMask.roundRect(0, 0, w, gridHeight, constants.CORNER_RADIUS).fill(0xffffff);
+      midiEditorBg.rect(0, 0, w, h).fill({ color: "#1a1a1a" });
+      mainMask.rect(0, 0, w, gridHeight).fill(0xffffff);
     } else {
-      // --- MASK CLASSIC ---
       const gridWidth = w - constants.PIANO_KEYS_WIDTH;
       const gridHeight = h - constants.VELOCITY_ZONE_HEIGHT;
       const v_h = constants.VELOCITY_ZONE_HEIGHT - constants.VELOCITY_ZONE_GAP;
