@@ -73,9 +73,14 @@ export class NotesRenderer {
       sprite.visible = true;
       sprite.noteData = note;
 
-      const keyWidth = this.deps.appScreen.width / 128;
+      const keyWidth = this.deps.appScreen.width / 75;
       const rowHeight = this.getRowHeight();
-      const geometry = engine.strategy.getNoteGeometry(note, rowHeight, keyWidth);
+      const geometry = engine.strategy.getNoteGeometry(
+        note,
+        rowHeight,
+        keyWidth,
+        midiObject().durationInTicks,
+      );
 
       sprite.x = geometry.x;
       sprite.y = geometry.y;

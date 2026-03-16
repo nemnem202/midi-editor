@@ -16,7 +16,7 @@ const DEFAULT_PROJECT: Project = {
   description: "A popular jazz standart",
   creation: new Date(Date.now()),
   lasModified: new Date(Date.now()),
-  midiFileUrl: "assets/midi/FlyMeToTheMoon.mid",
+  midiFileUrl: "assets/midi/escalier.mid",
   config: {
     bpm: 120,
     currentTracklistTick: 0,

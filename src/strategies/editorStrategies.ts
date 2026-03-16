@@ -64,18 +64,32 @@ export class PianoRollStrategy implements EditorStrategy {
     }
   }
 
-  getNoteGeometry(note: Note, _rowHeight: number, keyWidth: number): NoteGeometry {
+  getNoteGeometry(
+    note: Note,
+    _rowHeight: number,
+    keyWidth: number,
+    totalLength: number,
+  ): NoteGeometry {
+    const noteType = note.midi % 12;
+    const xfromMidi = this.getXFromMidi(note.midi, keyWidth);
+    let x = xfromMidi + keyWidth * 0.26;
+    let width = keyWidth * 0.48;
+
+    if (noteType === 0 || noteType === 5) {
+      x = xfromMidi;
+      width = keyWidth * 0.76;
+    } else if (noteType === 4 || noteType === 11) {
+      x = xfromMidi + keyWidth * 0.24;
+      width = keyWidth * 0.76;
+    } else if (noteType === 2 || noteType === 7 || noteType === 9) {
+      x = xfromMidi + keyWidth * 0.24;
+      width = keyWidth * 0.52;
+    }
+
     return {
-      x: this.getXFromMidi(note.midi, keyWidth),
-      y: note.ticks,
-      width:
-        note.midi % 12 === 1 ||
-        note.midi % 12 === 3 ||
-        note.midi % 12 === 6 ||
-        note.midi % 12 === 8 ||
-        note.midi % 12 === 10
-          ? keyWidth * 0.7
-          : keyWidth,
+      x: x,
+      y: totalLength - note.ticks,
+      width: width,
       height: note.durationTicks,
     };
   }

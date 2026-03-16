@@ -16,7 +16,12 @@ export interface EditorStrategy {
   showTracklist: boolean;
 
   // Coordonnées et Layout
-  getNoteGeometry(note: Note, rowHeight: number, keyWidth: number): NoteGeometry;
+  getNoteGeometry(
+    note: Note,
+    rowHeight: number,
+    keyWidth: number,
+    totalLength: number,
+  ): NoteGeometry;
   getKeyBounds(
     index: number,
     rowHeight: number,
