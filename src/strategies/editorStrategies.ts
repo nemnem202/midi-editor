@@ -88,7 +88,7 @@ export class PianoRollStrategy implements EditorStrategy {
 
     return {
       x: x,
-      y: totalLength - note.ticks,
+      y: totalLength - note.ticks - note.durationTicks,
       width: width,
       height: note.durationTicks,
     };
