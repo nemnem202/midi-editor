@@ -1,6 +1,8 @@
+import type MidiEditorEngine from "@/midiEditorEngine";
 import { Container, FederatedPointerEvent } from "pixi.js";
 
 interface PanDeps {
+  engine: MidiEditorEngine;
   notesGrid: Container;
   pianoKeysContainer: Container;
   velocityContainer: Container;
@@ -19,24 +21,29 @@ export class PanController {
   tryPan(e: FederatedPointerEvent) {
     if (!this.lastDragPos) return;
 
-    const { notesGrid, pianoKeysContainer, velocityContainer, constrain, onAfterPan } = this.deps;
+    const { notesGrid, pianoKeysContainer, velocityContainer, constrain, onAfterPan, engine } =
+      this.deps;
+    const isPianoRoll = engine.strategy.name === "pianoroll";
 
     const dx = e.global.x - this.lastDragPos.x;
     const dy = e.global.y - this.lastDragPos.y;
 
     notesGrid.x += dx;
-    notesGrid.y += dy;
 
     constrain();
 
-    pianoKeysContainer.y = notesGrid.y;
-    velocityContainer.x = notesGrid.x;
+    if (isPianoRoll) {
+      pianoKeysContainer.x = notesGrid.x;
+    } else {
+      pianoKeysContainer.y = notesGrid.y;
+      velocityContainer.x = notesGrid.x;
+      notesGrid.y += dy;
+    }
 
     this.lastDragPos = { x: e.global.x, y: e.global.y };
 
     onAfterPan?.();
   }
-
   updateLastDragPos(e: FederatedPointerEvent) {
     this.lastDragPos = { x: e.global.x, y: e.global.y };
   }

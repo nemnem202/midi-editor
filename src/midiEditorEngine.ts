@@ -500,6 +500,7 @@ export default class MidiEditorEngine {
   };
   private attachPanController = () => {
     this.panController = new PanController({
+      engine: this,
       notesGrid: this.notes_grid_container,
       pianoKeysContainer: this.piano_keys_container,
       velocityContainer: this.velocity_container,
