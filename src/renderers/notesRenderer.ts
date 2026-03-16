@@ -34,7 +34,7 @@ export class NotesRenderer {
 
   draw() {
     const { container, midiObject, engine } = this.deps;
-    const isPianoRoll = (engine.strategy.name = "pianoroll");
+    const isPianoRoll = engine.strategy.name === "pianoroll";
     const rowHeight = this.getRowHeight();
     const currentTrackIndex = engine.currentTrack;
 
