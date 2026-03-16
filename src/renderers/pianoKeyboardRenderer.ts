@@ -86,7 +86,7 @@ export default class PianoKeyboardRenderer {
       .stroke({ color: "#000000", pixelLine: true, width: 0.5 });
 
     const whiteTxt = new Text({
-      text: (currentMidi % 12).toString(),
+      text: currentMidi.toString(),
       style: new TextStyle({
         fontFamily: "Arial",
         fontWeight: "bold",
@@ -117,7 +117,7 @@ export default class PianoKeyboardRenderer {
       .fill({ color: "#000000" });
 
     const blackTxt = new Text({
-      text: (currentMidi % 12).toString(),
+      text: currentMidi.toString(),
       style: new TextStyle({
         fontFamily: "Arial",
         fontWeight: "bold",
