@@ -56,6 +56,8 @@ export default class MidiEditorEngine {
   public triggerMidiCommand: (command: Command<MidiObject>) => void;
   public triggerProjectCommand: (command: Command<Project>) => void;
 
+  public curentlyPlayedNotes: number[] = [];
+
   private root_div: HTMLDivElement;
   private app: Application = new Application();
 
@@ -217,6 +219,7 @@ export default class MidiEditorEngine {
         } else {
           this.viewportController.updateScrollFromPlaying(currentTick);
         }
+        this.updateMidiNotesEvents();
       }
     });
   };
@@ -257,7 +260,6 @@ export default class MidiEditorEngine {
         if (this.strategy.name === "classic") {
           this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
         } else {
-          console.log("oeoe");
           this.viewportController.updateScrollFromPlaying(newConfig.currentTracklistTick);
         }
       }
@@ -269,6 +271,9 @@ export default class MidiEditorEngine {
       }
       if (newConfig.displayedTrackIndex !== prevConfig.displayedTrackIndex) {
         this.drawAllNotes();
+      }
+      if (newConfig.isPlaying !== prevConfig.isPlaying) {
+        if (!newConfig.isPlaying) this.pause();
       }
       this._soundEngine.updateProject(this.engineProject);
     }
@@ -553,4 +558,27 @@ export default class MidiEditorEngine {
   private drawTracklist = () => {
     this.tracklistRenderer.draw();
   };
+
+  private pause() {
+    this.curentlyPlayedNotes = [];
+    this.pianoKeyboardRenderer.draw();
+  }
+
+  private updateMidiNotesEvents() {
+    const currentNotes = this.getCurrentNotes();
+    if (arraysEqual(currentNotes, this.curentlyPlayedNotes)) return;
+    this.curentlyPlayedNotes = currentNotes;
+    this.pianoKeyboardRenderer.draw();
+  }
+
+  private getCurrentNotes(): number[] {
+    const currentTrack = this.midiObject.tracks[this.currentTrack];
+    return currentTrack.notes
+      .filter(
+        (n) =>
+          n.ticks <= this._soundEngine.currentTicks &&
+          n.ticks + n.durationTicks >= this._soundEngine.currentTicks,
+      )
+      .map((n) => n.midi);
+  }
 }
