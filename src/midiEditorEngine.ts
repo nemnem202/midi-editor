@@ -181,25 +181,29 @@ export default class MidiEditorEngine {
     this.addListeners();
 
     this.createGridRenderer();
-    this.createVelocityGridRenderer();
-    this.createNotesRenderer();
-    this.createVelocityRenderer();
     this.createLayoutManager();
-    this.createTracklistRenderer();
     this.createPianoKeyboardRenderer();
+    this.createNotesRenderer();
     this.createMenuRenderer();
 
+    if (this.strategy.name === "classic") {
+      this.createVelocityGridRenderer();
+      this.createVelocityRenderer();
+      this.createTracklistRenderer();
+    }
+
     this.attachViewportController();
-    this.attachSelectionController();
     this.attachPanController();
     this.attachKeyboardController();
+    if (this.strategy.name === "classic") this.attachSelectionController();
 
     this.layoutManager.updateMask();
 
     this.drawKeys();
     this.drawAllGrids();
-    this.drawTracklist();
     this.drawAllNotes();
+
+    if (this.strategy.name === "classic") this.drawTracklist();
 
     this.is_ready = true;
 
@@ -343,10 +347,10 @@ export default class MidiEditorEngine {
         document.body.style.cursor = "grabbing";
         this.panController.updateLastDragPos(e);
       } else if (e.button === 0) {
-        this.selectionController.unselectAll();
-        this.tracklistRenderer.updatePositionFromUser(e);
+        if (this.strategy.name === "classic") this.selectionController.unselectAll();
+        if (this.strategy.name === "classic") this.tracklistRenderer.updatePositionFromUser(e);
       } else {
-        this.selectionController.updateSelectionOrigin(e);
+        if (this.strategy.name === "classic") this.selectionController.updateSelectionOrigin(e);
       }
     });
 
@@ -356,16 +360,19 @@ export default class MidiEditorEngine {
     });
 
     this.notes_grid_container.on("globalpointermove", (e) => {
-      this.selectionController.tryDrawSelection(e);
+      if (this.strategy.name === "classic") this.selectionController.tryDrawSelection(e);
       this.panController.tryPan(e);
     });
 
     this.notes_grid_container.on("pointerup", (e) => {
-      if (!this.selectionController._startedToSelect && e.button === 2) {
+      if (
+        (this.strategy.name === "pianoroll" || !this.selectionController._startedToSelect) &&
+        e.button === 2
+      ) {
         this.menuRenderer.drawMenu(e);
       }
       document.body.style.cursor = "default";
-      this.selectionController.finalize(e);
+      if (this.strategy.name === "classic") this.selectionController.finalize(e);
       this.panController.releaseLastDragPos();
     });
     this.notes_grid_container.on("pointerupoutside", (e) => {
@@ -485,7 +492,7 @@ export default class MidiEditorEngine {
       onAfterTransform: () => {
         this.drawAllGrids();
         this.layoutManager.updateHitbox();
-        this.velocityRenderer.updateWidth();
+        if (this.strategy.name === "classic") this.velocityRenderer.updateWidth();
       },
     });
   };
@@ -521,11 +528,11 @@ export default class MidiEditorEngine {
 
   private drawAllGrids = () => {
     this.gridRenderer.draw();
-    this.velocityGridRenderer.draw();
+    if (this.strategy.name === "classic") this.velocityGridRenderer.draw();
   };
   private drawAllNotes = () => {
     this.notesRenderer.draw();
-    this.velocityRenderer.draw();
+    if (this.strategy.name === "classic") this.velocityRenderer.draw();
   };
   drawKeys = () => {
     this.pianoKeyboardRenderer.draw();
