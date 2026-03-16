@@ -20,11 +20,9 @@ export default class PianoKeyboardRenderer {
     const { app, piano_keys_container, constants, engine } = this.deps;
     const strategy = engine.strategy;
 
-    const baseWidth = 2000;
-    const baseHeight = 2000;
-
-    const rowHeight = baseHeight / 75;
-    const keyWidth = baseWidth / 75;
+    const rowHeight = app.screen.height / 75;
+    // keyWidth : en mode PianoRoll, 75 touches doivent remplir la largeur de l'écran
+    const keyWidth = app.screen.width / 75;
     const pianoSize = constants.PIANO_KEYS_WIDTH;
 
     piano_keys_container.removeChildren();
