@@ -38,19 +38,23 @@ export class LayoutManager {
 
   private resizeOnInit() {
     const { app, notesGrid, velocityContainer, midiObject, constants, engine } = this.deps;
+    const isPianoRoll = engine.strategy.name === "pianoroll";
 
-    const availableWidth = app.screen.width - constants.PIANO_KEYS_WIDTH;
+    if (isPianoRoll) {
+    } else {
+      const availableWidth = app.screen.width - constants.PIANO_KEYS_WIDTH;
 
-    const initialScaleX = availableWidth / midiObject().durationInTicks;
+      const initialScaleX = availableWidth / midiObject().durationInTicks;
 
-    notesGrid.scale.set(initialScaleX, 1);
-    notesGrid.position.set(constants.PIANO_KEYS_WIDTH, 0);
+      notesGrid.scale.set(initialScaleX, 1);
+      notesGrid.position.set(constants.PIANO_KEYS_WIDTH, 0);
 
-    velocityContainer.scale.set(initialScaleX, 1);
-    velocityContainer.position.set(
-      constants.PIANO_KEYS_WIDTH,
-      app.screen.height - constants.VELOCITY_ZONE_HEIGHT + constants.VELOCITY_ZONE_GAP,
-    );
+      velocityContainer.scale.set(initialScaleX, 1);
+      velocityContainer.position.set(
+        constants.PIANO_KEYS_WIDTH,
+        app.screen.height - constants.VELOCITY_ZONE_HEIGHT + constants.VELOCITY_ZONE_GAP,
+      );
+    }
   }
 
   private attachResize() {
@@ -68,32 +72,57 @@ export class LayoutManager {
   }
 
   updateMask() {
-    const { app, mainMask, velocityMask, midiEditorBg, velocityBg, constants, velocityContainer } =
-      this.deps;
+    const { app, mainMask, velocityMask, midiEditorBg, velocityBg, constants, engine } = this.deps;
+    const isPianoRoll = engine.strategy.name === "pianoroll";
 
     const w = app.screen.width;
-    const h = app.screen.height - constants.VELOCITY_ZONE_HEIGHT;
-    const v_h = constants.VELOCITY_ZONE_HEIGHT - constants.VELOCITY_ZONE_GAP;
+    const h = app.screen.height;
 
-    midiEditorBg
-      .clear()
-      .roundRect(0, 0, w, h, constants.CORNER_RADIUS)
-      .stroke({ color: "#161616", alignment: 1, width: 1 });
+    midiEditorBg.clear();
+    mainMask.clear();
+    velocityBg.clear();
+    velocityMask.clear();
 
-    mainMask.clear().roundRect(0, 0, w, h, constants.CORNER_RADIUS).fill(0xffffff);
+    if (isPianoRoll) {
+      // --- MASK PIANO ROLL ---
+      const gridHeight = h - constants.PIANO_KEYS_WIDTH;
 
-    const scaleX = velocityContainer.scale.x || 1;
+      midiEditorBg.roundRect(0, 0, w, h, constants.CORNER_RADIUS).fill({ color: "#1a1a1a" });
 
-    velocityMask
-      .clear()
-      .roundRect(
-        constants.PIANO_KEYS_WIDTH,
-        h + constants.VELOCITY_ZONE_GAP,
-        w - constants.PIANO_KEYS_WIDTH,
-        v_h,
-        constants.CORNER_RADIUS,
-      )
-      .fill(0xffffff);
+      // Le masque de la grille s'arrête juste avant le piano en bas
+      mainMask.roundRect(0, 0, w, gridHeight, constants.CORNER_RADIUS).fill(0xffffff);
+    } else {
+      // --- MASK CLASSIC ---
+      const gridWidth = w - constants.PIANO_KEYS_WIDTH;
+      const gridHeight = h - constants.VELOCITY_ZONE_HEIGHT;
+      const v_h = constants.VELOCITY_ZONE_HEIGHT - constants.VELOCITY_ZONE_GAP;
+
+      midiEditorBg
+        .roundRect(0, 0, w, gridHeight, constants.CORNER_RADIUS)
+        .stroke({ color: "#161616", alignment: 1, width: 1 });
+
+      mainMask.roundRect(0, 0, w, gridHeight, constants.CORNER_RADIUS).fill(0xffffff);
+
+      velocityBg
+        .roundRect(
+          constants.PIANO_KEYS_WIDTH,
+          gridHeight + constants.VELOCITY_ZONE_GAP,
+          gridWidth,
+          v_h,
+          constants.CORNER_RADIUS,
+        )
+        .stroke({ color: "#161616", alignment: 1, width: 1 });
+
+      velocityMask
+        .roundRect(
+          constants.PIANO_KEYS_WIDTH,
+          gridHeight + constants.VELOCITY_ZONE_GAP,
+          gridWidth,
+          v_h,
+          constants.CORNER_RADIUS,
+        )
+        .fill(0xffffff);
+    }
   }
 
   updateHitbox() {
