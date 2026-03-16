@@ -1,5 +1,11 @@
 import type { Note } from "types/project";
-import type { Rectangle } from "pixi.js";
+
+export interface NoteGeometry {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 export interface EditorStrategy {
   name: "classic" | "pianoroll";
@@ -10,9 +16,26 @@ export interface EditorStrategy {
   showTracklist: boolean;
 
   // Coordonnées et Layout
-  getNoteBounds(
-    note: Note,
+  getNoteGeometry(note: Note, rowHeight: number, keyWidth: number): NoteGeometry;
+  getKeyBounds(
+    index: number,
     rowHeight: number,
-  ): { x: number; y: number; width: number; height: number };
-  getGridBounds(durationTicks: number, screen: { width: number; height: number }): Rectangle;
+    keyWidth: number,
+    pianoHeight: number,
+  ): NoteGeometry;
+  getPitchAxis(): "x" | "y";
+  getTimeAxis(): "x" | "y";
+
+  getWhiteKeyBounds(
+    midi: number,
+    rowHeight: number,
+    keyWidth: number,
+    pianoSize: number,
+  ): NoteGeometry;
+  getBlackKeyBounds(
+    midi: number,
+    rowHeight: number,
+    keyWidth: number,
+    pianoSize: number,
+  ): NoteGeometry;
 }

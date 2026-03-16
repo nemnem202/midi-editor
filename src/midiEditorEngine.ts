@@ -48,7 +48,7 @@ export class NoteSprite extends Sprite {
 }
 
 export default class MidiEditorEngine {
-  private strategy: EditorStrategy;
+  strategy: EditorStrategy;
   private _soundEngine!: SoundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
@@ -458,6 +458,7 @@ export default class MidiEditorEngine {
   private createPianoKeyboardRenderer = () => {
     this.pianoKeyboardRenderer = new PianoKeyboardRenderer({
       app: this.app,
+      engine: this,
       constants: {
         PIANO_KEYS_WIDTH,
       },

@@ -71,10 +71,15 @@ export class NotesRenderer {
 
       sprite.visible = true;
       sprite.noteData = note;
-      sprite.x = note.ticks;
-      sprite.y = (127 - note.midi) * rowHeight;
-      sprite.width = note.durationTicks;
-      sprite.height = rowHeight;
+
+      const keyWidth = this.deps.appScreen.width / 128;
+      const rowHeight = this.getRowHeight();
+      const geometry = engine.strategy.getNoteGeometry(note, rowHeight, keyWidth);
+
+      sprite.x = geometry.x;
+      sprite.y = geometry.y;
+      sprite.width = geometry.width;
+      sprite.height = geometry.height;
 
       sprite.alpha = isCurrent ? 1 : 0.2;
       sprite.eventMode = isCurrent ? "static" : "none";
