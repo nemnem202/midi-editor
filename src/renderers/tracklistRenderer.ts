@@ -1,12 +1,12 @@
 import { SetPlayOrPauseCommand, TogglePlayCommand, UpdateCurrentTickCommand } from "@/commands";
 import { getNearestSubdivisionRoundedTick } from "../lib/utils";
-import type MidiEditorContainerEngine from "../midiEditorEngine";
+import type MidiEditorEngine from "../midiEditorEngine";
 import { FederatedPointerEvent, Graphics, type Container } from "pixi.js";
 
 interface TracklistDeps {
   container: Container;
   track: Graphics;
-  engine: MidiEditorContainerEngine;
+  engine: MidiEditorEngine;
 }
 
 export default class TracklistRenderer {

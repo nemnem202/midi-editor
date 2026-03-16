@@ -8,10 +8,10 @@ import {
   type Command,
 } from "../commands";
 import type { MidiObject, Note, Project } from "types/project";
-import type MidiEditorContainerEngine from "../midiEditorEngine";
+import type MidiEditorEngine from "../midiEditorEngine";
 
 interface KeyboardControllerDeps {
-  parent: MidiEditorContainerEngine;
+  parent: MidiEditorEngine;
   triggerMidiCommand: (command: Command<MidiObject>) => void;
   triggerProjectCommand: (Command: Command<Project>) => void;
 }

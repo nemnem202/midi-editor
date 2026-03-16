@@ -1,13 +1,13 @@
 import type { Command } from "@/commands";
 import type { MidiEditorContainerProps } from "@/midiEditor";
-import MidiEditorContainerEngine from "@/midiEditorEngine";
+import MidiEditorEngine from "@/midiEditorEngine";
 import { useEffect, useRef } from "react";
 import type { MidiObject, Project } from "types/project";
 
 export default function useMidiEditorContainer(props: MidiEditorContainerProps) {
   const { midiObject, setMidiObject, project, setProject } = props;
   const containerRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<MidiEditorContainerEngine | null>(null);
+  const engineRef = useRef<MidiEditorEngine | null>(null);
   const midiRef = useRef(midiObject);
   const projectRef = useRef(project);
 
@@ -38,7 +38,7 @@ export default function useMidiEditorContainer(props: MidiEditorContainerProps) 
 
   useEffect(() => {
     if (!containerRef.current || engineRef.current) return;
-    const engine = new MidiEditorContainerEngine(
+    const engine = new MidiEditorEngine(
       containerRef.current,
       midiObject,
       (midiCommand) => midiCommandRef.current(midiCommand),

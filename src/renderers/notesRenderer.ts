@@ -1,4 +1,4 @@
-import type MidiEditorContainerEngine from "../midiEditorEngine";
+import type MidiEditorEngine from "../midiEditorEngine";
 import {
   DeleteNoteCommand,
   SelectNotesCommand,
@@ -13,7 +13,7 @@ import { NoteSprite } from "../midiEditorEngine";
 const MIN_DURATION = 10;
 
 interface NotesRendererDeps {
-  engine: MidiEditorContainerEngine;
+  engine: MidiEditorEngine;
   container: Container<NoteSprite>;
   notesGrid: Container;
   appScreen: { width: number; height: number };

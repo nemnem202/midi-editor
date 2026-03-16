@@ -1,9 +1,9 @@
-import type MidiEditorContainerEngine from "../midiEditorEngine";
+import type MidiEditorEngine from "../midiEditorEngine";
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface LayoutDeps {
-  engine: MidiEditorContainerEngine;
+  engine: MidiEditorEngine;
   app: Application;
   rootDiv: HTMLDivElement;
   notesGrid: Container;

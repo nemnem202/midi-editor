@@ -1,11 +1,11 @@
 import { BINARY_SUBDIVISIONS } from "@/config/constants";
 import { getSubdivisionTickInterval, grayFromScale } from "@/lib/utils";
-import type MidiEditorContainerEngine from "@/midiEditorEngine";
+import type MidiEditorEngine from "@/midiEditorEngine";
 import { Graphics, Container } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface VelocityGridRendererDeps {
-  engine: MidiEditorContainerEngine;
+  engine: MidiEditorEngine;
   graphics: Graphics;
   notesGrid: Container;
   appScreen: { width: number; height: number };

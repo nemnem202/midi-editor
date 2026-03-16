@@ -45,7 +45,7 @@ export class NoteSprite extends Sprite {
   };
 }
 
-export default class MidiEditorContainerEngine {
+export default class MidiEditorEngine {
   private _soundEngine!: SoundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
