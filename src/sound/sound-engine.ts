@@ -2,10 +2,10 @@ import { getTransport, Midi, Part, PolySynth, Sampler, start } from "tone";
 import type { MidiObject, Project, Track } from "types/project";
 
 interface TrackInstruments {
-  piano: Sampler;
-  guitar: Sampler;
-  bass: Sampler;
-  drums: Sampler;
+  piano: PolySynth;
+  guitar: PolySynth;
+  bass: PolySynth;
+  drums: PolySynth;
 }
 
 export default class SoundEngine {
@@ -22,50 +22,10 @@ export default class SoundEngine {
 
   private static initTrackInstruments(): TrackInstruments {
     return {
-      piano: new Sampler({
-        urls: {
-          C1: "kick.ogg",
-          D1: "snare.ogg",
-          E1: "hihat.ogg",
-          F1: "tom1.ogg",
-          G1: "tom2.ogg",
-          A1: "crash.ogg",
-        },
-        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
-      }).toDestination(),
-      guitar: new Sampler({
-        urls: {
-          C1: "kick.ogg",
-          D1: "snare.ogg",
-          E1: "hihat.ogg",
-          F1: "tom1.ogg",
-          G1: "tom2.ogg",
-          A1: "crash.ogg",
-        },
-        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
-      }).toDestination(),
-      bass: new Sampler({
-        urls: {
-          C1: "kick.ogg",
-          D1: "snare.ogg",
-          E1: "hihat.ogg",
-          F1: "tom1.ogg",
-          G1: "tom2.ogg",
-          A1: "crash.ogg",
-        },
-        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
-      }).toDestination(),
-      drums: new Sampler({
-        urls: {
-          C1: "kick.ogg",
-          D1: "snare.ogg",
-          E1: "hihat.ogg",
-          F1: "tom1.ogg",
-          G1: "tom2.ogg",
-          A1: "crash.ogg",
-        },
-        baseUrl: "https://cdn.jsdelivr.net/npm/tonejs-instrument-drums-ogg@1.0.0/",
-      }).toDestination(),
+      piano: new PolySynth().toDestination(),
+      guitar: new PolySynth().toDestination(),
+      bass: new PolySynth().toDestination(),
+      drums: new PolySynth().toDestination(),
     };
   }
 

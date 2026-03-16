@@ -212,7 +212,11 @@ export default class MidiEditorEngine {
     this.app.ticker.add(() => {
       if (this.is_ready && this.project.config.isPlaying) {
         const currentTick = this._soundEngine.currentTicks;
-        this.tracklistRenderer.updatePositionFromPlaying(currentTick);
+        if (this.strategy.name === "classic") {
+          this.tracklistRenderer.updatePositionFromPlaying(currentTick);
+        } else {
+          this.viewportController.updateScrollFromPlaying(currentTick);
+        }
       }
     });
   };
@@ -250,7 +254,12 @@ export default class MidiEditorEngine {
     this.engineProject = newProject;
     if (this.is_ready) {
       if (newConfig.currentTracklistTick !== prevConfig.currentTracklistTick) {
-        this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
+        if (this.strategy.name === "classic") {
+          this.tracklistRenderer.updatePositionFromPlaying(newConfig.currentTracklistTick);
+        } else {
+          console.log("oeoe");
+          this.viewportController.updateScrollFromPlaying(newConfig.currentTracklistTick);
+        }
       }
       if (
         arraysEqual(newConfig.gridSubdivisions, prevConfig.gridSubdivisions) ||
@@ -266,9 +275,13 @@ export default class MidiEditorEngine {
   }
 
   private async get_soundEngine() {
-    await SoundEngine.init(this.project, this.midiObject, (tick) =>
-      this.tracklistRenderer.updatePositionFromPlaying(tick),
-    );
+    await SoundEngine.init(this.project, this.midiObject, (tick) => {
+      if (this.strategy.name === "classic") {
+        this.tracklistRenderer.updatePositionFromPlaying(tick);
+      } else {
+        this.viewportController.updateScrollFromPlaying(tick);
+      }
+    });
     this._soundEngine = SoundEngine.get();
   }
 

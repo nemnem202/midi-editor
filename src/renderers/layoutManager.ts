@@ -75,7 +75,6 @@ export class LayoutManager {
       const isPianoRoll = this.deps.engine.strategy.name === "pianoroll";
 
       if (isPianoRoll) {
-        // Recalage du piano en bas après resize
         this.deps.pianoKeysContainer.x = this.deps.notesGrid.x;
         this.deps.pianoKeysContainer.scale.x = this.deps.notesGrid.scale.x;
       } else {
@@ -83,8 +82,6 @@ export class LayoutManager {
         this.deps.pianoKeysContainer.scale.y = this.deps.notesGrid.scale.y;
       }
 
-      // IMPORTANT : On redessine les touches pour recalculer keyWidth/rowHeight
-      // par rapport à la nouvelle taille de l'écran
       this.deps.engine.drawKeys();
 
       this.deps.onResize?.();

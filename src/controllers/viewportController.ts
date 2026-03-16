@@ -148,4 +148,16 @@ export default class ViewportController {
     velocityContainer.x = notesGrid.x;
     velocityContainer.scale.x = notesGrid.scale.x;
   }
+
+  updateScrollFromPlaying(currentTick: number) {
+    const { notesGrid, appScreen, constants, midiObject } = this.deps;
+
+    const pianoTopY = appScreen.height - constants.PIANO_KEYS_WIDTH;
+
+    const totalTicks = midiObject().durationInTicks;
+
+    const localY = totalTicks - currentTick;
+
+    notesGrid.y = pianoTopY - localY * notesGrid.scale.y;
+  }
 }
