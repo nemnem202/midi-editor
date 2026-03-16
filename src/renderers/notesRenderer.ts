@@ -34,6 +34,7 @@ export class NotesRenderer {
 
   draw() {
     const { container, midiObject, engine } = this.deps;
+    const isPianoRoll = (engine.strategy.name = "pianoroll");
     const rowHeight = this.getRowHeight();
     const currentTrackIndex = engine.currentTrack;
 
@@ -65,7 +66,7 @@ export class NotesRenderer {
         sprite = container.children[index];
       } else {
         sprite = this.pool.pop() || new NoteSprite(Texture.WHITE);
-        this.attachEvents(sprite);
+        !isPianoRoll && this.attachEvents(sprite);
         container.addChild(sprite);
       }
 
