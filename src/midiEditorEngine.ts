@@ -473,6 +473,7 @@ export default class MidiEditorEngine {
   private attachViewportController = () => {
     this.viewportController = new ViewportController({
       appScreen: this.app.screen,
+      engine: this,
       notesGrid: this.notes_grid_container,
       velocityContainer: this.velocity_container,
       pianoKeysContainer: this.piano_keys_container,
@@ -525,7 +526,7 @@ export default class MidiEditorEngine {
     this.notesRenderer.draw();
     this.velocityRenderer.draw();
   };
-  private drawKeys = () => {
+  drawKeys = () => {
     this.pianoKeyboardRenderer.draw();
   };
   private drawTracklist = () => {

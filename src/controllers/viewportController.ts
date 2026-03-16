@@ -1,8 +1,10 @@
+import type MidiEditorEngine from "@/midiEditorEngine";
 import type { Container, FederatedWheelEvent } from "pixi.js";
 import type { MidiObject } from "types/project";
 
 interface ViewportDeps {
   appScreen: { width: number; height: number };
+  engine: MidiEditorEngine;
   notesGrid: Container;
   velocityContainer: Container;
   pianoKeysContainer: Container;
@@ -23,8 +25,15 @@ export default class ViewportController {
   }
 
   handleZoom(e: FederatedWheelEvent) {
-    const { notesGrid, velocityContainer, pianoKeysContainer, midiObject, appScreen, constants } =
-      this.deps;
+    const {
+      notesGrid,
+      velocityContainer,
+      pianoKeysContainer,
+      midiObject,
+      appScreen,
+      constants,
+      engine,
+    } = this.deps;
 
     const worldPointerPos = { x: e.globalX, y: e.globalY };
     const localPointerPos = notesGrid.toLocal(worldPointerPos);
@@ -55,11 +64,17 @@ export default class ViewportController {
 
     this.constrain();
 
-    pianoKeysContainer.y = notesGrid.y;
-    pianoKeysContainer.scale.y = notesGrid.scale.y;
+    const isPianoRoll = engine.strategy.name === "pianoroll";
+    if (isPianoRoll) {
+      pianoKeysContainer.scale.x = notesGrid.scale.x;
+      pianoKeysContainer.x = notesGrid.x;
+    } else {
+      pianoKeysContainer.y = notesGrid.y;
+      pianoKeysContainer.scale.y = notesGrid.scale.y;
 
-    velocityContainer.x = notesGrid.x;
-    velocityContainer.scale.x = notesGrid.scale.x;
+      velocityContainer.x = notesGrid.x;
+      velocityContainer.scale.x = notesGrid.scale.x;
+    }
 
     this.deps.onAfterTransform?.();
   }

@@ -72,14 +72,20 @@ export class LayoutManager {
       this.updateMask();
       this.updateHitbox();
 
-      // FIX ICI : Le piano ne suit la grille que si on est en mode vertical (Classic)
-      if (this.deps.engine.strategy.name === "classic") {
+      const isPianoRoll = this.deps.engine.strategy.name === "pianoroll";
+
+      if (isPianoRoll) {
+        // Recalage du piano en bas après resize
+        this.deps.pianoKeysContainer.x = this.deps.notesGrid.x;
+        this.deps.pianoKeysContainer.scale.x = this.deps.notesGrid.scale.x;
+      } else {
         this.deps.pianoKeysContainer.y = this.deps.notesGrid.y;
         this.deps.pianoKeysContainer.scale.y = this.deps.notesGrid.scale.y;
-      } else {
-        // En Piano Roll, on s'assure que le scale est réinitialisé à 1
-        this.deps.pianoKeysContainer.scale.set(1, 1);
       }
+
+      // IMPORTANT : On redessine les touches pour recalculer keyWidth/rowHeight
+      // par rapport à la nouvelle taille de l'écran
+      this.deps.engine.drawKeys();
 
       this.deps.onResize?.();
     });

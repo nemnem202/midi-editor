@@ -44,7 +44,7 @@ export default function useMidiEditorContainer(props: MidiEditorContainerProps) 
       (midiCommand) => midiCommandRef.current(midiCommand),
       project,
       (projectCommand) => projectCommandRef.current(projectCommand),
-      "pianoroll",
+      "classic",
     );
     engineRef.current = engine;
     engine.init();
