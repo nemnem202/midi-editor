@@ -24,6 +24,8 @@ import { arraysEqual, getNearestSubdivisionRoundedTick } from "./lib/utils";
 import MenuRenderer from "./renderers/menuRenderer";
 import { Midi } from "tone";
 import SoundEngine from "./sound/sound-engine";
+import type { EditorStrategy } from "./strategies/types";
+import { ClassicStrategy, PianoRollStrategy } from "./strategies/editorStrategies";
 
 const PIANO_KEYS_WIDTH = 100;
 const VELOCITY_ZONE_HEIGHT = 150;
@@ -46,6 +48,7 @@ export class NoteSprite extends Sprite {
 }
 
 export default class MidiEditorEngine {
+  private strategy: EditorStrategy;
   private _soundEngine!: SoundEngine;
   private is_ready = false;
   private engineMidiObject: MidiObject;
@@ -126,12 +129,14 @@ export default class MidiEditorEngine {
     triggerMidiCommand: (command: Command<MidiObject>) => void,
     project: Project,
     triggerProjectCommand: (command: Command<Project>) => void,
+    mode: "classic" | "pianoroll" = "classic",
   ) {
     this.root_div = root_div;
     this.engineMidiObject = midiObject;
     this.engineProject = project;
     this.triggerMidiCommand = triggerMidiCommand;
     this.triggerProjectCommand = triggerProjectCommand;
+    this.strategy = mode === "classic" ? new ClassicStrategy() : new PianoRollStrategy();
   }
 
   get midiObject(): MidiObject {
@@ -169,7 +174,7 @@ export default class MidiEditorEngine {
       antialias: false,
     });
 
-    //@ts-ignore
+    // @ts-ignore
     globalThis.__PIXI_APP__ = this.app;
 
     this.createArborescence();
@@ -280,15 +285,21 @@ export default class MidiEditorEngine {
     this.app.stage.addChild(this.main_mask);
     this.midi_editor_container.mask = this.main_mask;
 
-    this.app.stage.addChild(this.velocity_mask);
-    this.velocity_container.mask = this.velocity_mask;
+    this.velocity_container.visible = this.strategy.showVelocity;
+    this.velocity_bg.visible = this.strategy.showVelocity;
+    this.tracklist.visible = this.strategy.showTracklist;
+
+    if (this.strategy.showVelocity) {
+      this.app.stage.addChild(this.velocity_mask);
+      this.velocity_container.mask = this.velocity_mask;
+    }
 
     this.app.stage.addChild(this.midi_editor_container);
-    this.app.stage.addChild(this.velocity_container);
-    this.app.stage.addChild(this.midi_editor_bg);
-    this.app.stage.addChild(this.velocity_bg);
-  }
+    if (this.strategy.showVelocity) this.app.stage.addChild(this.velocity_container);
 
+    this.app.stage.addChild(this.midi_editor_bg);
+    if (this.strategy.showVelocity) this.app.stage.addChild(this.velocity_bg);
+  }
   private addListeners = () => {
     let alreadyClicked = false;
     let timeout: number | null = null;
@@ -362,10 +373,6 @@ export default class MidiEditorEngine {
       this.panController.releaseLastDragPos();
     });
   };
-
-  //////////////////////////
-  //   Create renderers   //
-  //////////////////////////
 
   private createGridRenderer = () => {
     this.gridRenderer = new GridRenderer({
@@ -461,10 +468,6 @@ export default class MidiEditorEngine {
     this.menuRenderer = new MenuRenderer({ engine: this, app: this.app });
   };
 
-  //////////////////////////
-  //   Attach controllers //
-  //////////////////////////
-
   private attachViewportController = () => {
     this.viewportController = new ViewportController({
       appScreen: this.app.screen,
@@ -511,10 +514,6 @@ export default class MidiEditorEngine {
       triggerProjectCommand: this.triggerProjectCommand,
     });
   };
-
-  /////////////////////////////
-  //   Draw updated elements //
-  /////////////////////////////
 
   private drawAllGrids = () => {
     this.gridRenderer.draw();
