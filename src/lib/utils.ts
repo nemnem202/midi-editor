@@ -107,3 +107,7 @@ export function arraysEqual(a: number[], b: number[]): boolean {
 
   return true;
 }
+
+export function isBlackKey(midi: number) {
+  return [1, 3, 6, 8, 10].includes(midi % 12);
+}

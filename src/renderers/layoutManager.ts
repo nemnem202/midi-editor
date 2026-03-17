@@ -82,8 +82,6 @@ export class LayoutManager {
         this.deps.pianoKeysContainer.scale.y = this.deps.notesGrid.scale.y;
       }
 
-      this.deps.engine.drawKeys();
-
       this.deps.onResize?.();
     });
   }

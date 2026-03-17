@@ -122,8 +122,4 @@ export class GridRenderer {
 
     graphics.stroke({ color, pixelLine: true });
   }
-
-  private isBlackKey(midi: number) {
-    return [1, 3, 6, 8, 10].includes(midi % 12);
-  }
 }

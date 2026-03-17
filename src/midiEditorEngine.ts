@@ -561,14 +561,15 @@ export default class MidiEditorEngine {
 
   private pause() {
     this.curentlyPlayedNotes = [];
-    this.pianoKeyboardRenderer.draw();
+    this.pianoKeyboardRenderer.updateHighlights(this.curentlyPlayedNotes);
   }
 
   private updateMidiNotesEvents() {
     const currentNotes = this.getCurrentNotes();
     if (arraysEqual(currentNotes, this.curentlyPlayedNotes)) return;
     this.curentlyPlayedNotes = currentNotes;
-    this.pianoKeyboardRenderer.draw();
+
+    this.pianoKeyboardRenderer.updateHighlights(this.curentlyPlayedNotes);
   }
 
   private getCurrentNotes(): number[] {

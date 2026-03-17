@@ -6,6 +6,7 @@ import type { MidiProviderProps } from "@/midiProvider";
 import { Midi } from "@tonejs/midi";
 import { useHistoryState } from "@uidotdev/usehooks";
 import { useEffect, useRef, useState } from "react";
+import Stats from "stats.js";
 import type { MidiObject, Project } from "types/project";
 
 export default function useMidiProvider(props: MidiProviderProps) {
@@ -96,7 +97,26 @@ export default function useMidiProvider(props: MidiProviderProps) {
       setIsLoading(false);
     };
     loadMidi();
+    trackPerfs();
   }, []);
+
+  const trackPerfs = () => {
+    const stats = new Stats();
+
+    stats.showPanel(0);
+
+    document.body.appendChild(stats.dom);
+
+    function animate() {
+      stats.begin();
+
+      stats.end();
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  };
 
   return {
     isLoading,
