@@ -17,10 +17,7 @@ export class DeleteNoteCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.filter((n) => n !== this.note),
-      })),
+      notes: state.notes.filter((n) => n !== this.note),
     };
   }
 }
@@ -40,31 +37,27 @@ export class UpdateNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     const newState = {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.map((note) => {
-          const update = this.positions.find(
-            (p) =>
-              p.note.ticks === note.ticks && p.note.midi === note.midi && note.track === this.track,
-          );
+      notes: state.notes.map((note) => {
+        const update = this.positions.find(
+          (p) =>
+            p.note.ticks === note.ticks && p.note.midi === note.midi && note.track === this.track,
+        );
 
-          if (update) {
-            return {
-              ...note,
-              ticks: update.ticks ?? note.ticks,
-              midi: update.midi ?? note.midi,
-              durationTicks: update.durationTicks ?? note.durationTicks,
-              velocity: update.velocity ?? note.velocity,
-            };
-          }
-          return note;
-        }),
-      })),
+        if (update) {
+          return {
+            ...note,
+            ticks: update.ticks ?? note.ticks,
+            midi: update.midi ?? note.midi,
+            durationTicks: update.durationTicks ?? note.durationTicks,
+            velocity: update.velocity ?? note.velocity,
+          };
+        }
+        return note;
+      }),
     };
 
     const newDuration = Math.max(
-      getMidiLengthFromNotes(newState.tracks.flatMap((track) => track.notes)) +
-        2 * state.header.ppq,
+      getMidiLengthFromNotes(newState.notes) + 2 * state.header.ppq,
       state.durationInTicks,
     );
 
@@ -82,26 +75,20 @@ export class MoveNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     const nextState = {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.map((n) => {
-          if (n.isSelected) {
-            return {
-              ...n,
-              ticks: Math.max(0, n.ticks + this.ticks),
-              midi: Math.max(0, Math.min(127, n.midi + this.midi)),
-            };
-          }
-          return n;
-        }),
-      })),
+      notes: state.notes.map((n) => {
+        if (n.isSelected) {
+          return {
+            ...n,
+            ticks: Math.max(0, n.ticks + this.ticks),
+            midi: Math.max(0, Math.min(127, n.midi + this.midi)),
+          };
+        }
+        return n;
+      }),
     };
     return {
       ...nextState,
-      durationInTicks: Math.max(
-        getMidiLengthFromNotes(state.tracks.flatMap((track) => track.notes)),
-        state.durationInTicks,
-      ),
+      durationInTicks: Math.max(getMidiLengthFromNotes(state.notes), state.durationInTicks),
     };
   }
 }
@@ -109,10 +96,7 @@ export class DeleteSelectedNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.filter((n) => !n.isSelected),
-      })),
+      notes: state.notes.filter((n) => !n.isSelected),
     };
   }
 }
@@ -124,14 +108,11 @@ export class SelectNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.map((n) => ({
-          ...n,
-          isSelected: this.notesToSelect.some(
-            (nt) => nt.ticks === n.ticks && nt.midi === n.midi && n.track === this.currentTackIndex,
-          ),
-        })),
+      notes: state.notes.map((n) => ({
+        ...n,
+        isSelected: this.notesToSelect.some(
+          (nt) => nt.ticks === n.ticks && nt.midi === n.midi && n.track === this.currentTackIndex,
+        ),
       })),
     };
   }
@@ -141,12 +122,9 @@ export class SelectAllNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.map((n) => ({
-          ...n,
-          isSelected: n.track === this.currentTrackindex,
-        })),
+      notes: state.notes.map((n) => ({
+        ...n,
+        isSelected: n.track === this.currentTrackindex,
       })),
     };
   }
@@ -156,34 +134,24 @@ export class UnSelectAllNotesCommand implements Command<MidiObject> {
   execute(state: MidiObject): MidiObject {
     return {
       ...state,
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        notes: track.notes.map((n) => {
-          const isExcepted = this.excepted.some((e) => e.ticks === n.ticks && e.midi === n.midi);
-          return { ...n, isSelected: isExcepted };
-        }),
-      })),
+      notes: state.notes.map((n) => {
+        const isExcepted = this.excepted.some((e) => e.ticks === n.ticks && e.midi === n.midi);
+        return { ...n, isSelected: isExcepted };
+      }),
     };
   }
 }
 export class AddNotesCommand implements Command<MidiObject> {
   constructor(
     private notes: Note[],
-    private trackIndex: number,
+    private currentTrackindex: number,
   ) {}
 
   execute(state: MidiObject): MidiObject {
-    state.tracks.map((t) => t.notes.map((n) => ({ ...n, isSelected: false })));
+    state.notes.map((n) => ({ ...n, isSelected: false }));
     return {
       ...state,
-      tracks: state.tracks.map((track, idx) => {
-        if (idx !== this.trackIndex) return track;
-        return {
-          ...track,
-
-          notes: track.notes.concat(this.notes),
-        };
-      }),
+      notes: state.notes.concat(this.notes.map((n) => ({ ...n, track: this.currentTrackindex }))),
       durationInTicks: Math.max(getMidiLengthFromNotes(this.notes) + 200, state.durationInTicks),
     };
   }

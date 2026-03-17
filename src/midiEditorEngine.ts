@@ -248,8 +248,7 @@ export default class MidiEditorEngine {
         console.log("size changed");
       }
 
-      this.drawAllNotes();
-      // this.drawAllGrids();
+      this.drawAllNotes(); // TODO only if notes changed
       this._soundEngine.updateMidiObject(this.engineMidiObject);
     }
   }
@@ -552,6 +551,7 @@ export default class MidiEditorEngine {
     if (this.strategy.name === "classic") this.velocityGridRenderer.draw();
   };
   private drawAllNotes = () => {
+    console.log("draw all notes");
     this.notesRenderer.draw();
     if (this.strategy.name === "classic") this.velocityRenderer.draw();
   };
@@ -576,13 +576,16 @@ export default class MidiEditorEngine {
   }
 
   private getCurrentNotes(): number[] {
-    const currentTrack = this.midiObject.tracks[this.currentTrack];
-    return currentTrack.notes
-      .filter(
-        (n) =>
-          n.ticks <= this._soundEngine.currentTicks &&
-          n.ticks + n.durationTicks >= this._soundEngine.currentTicks,
-      )
-      .map((n) => n.midi);
+    const currentNotes: number[] = [];
+
+    this.midiObject.notes.forEach((n) => {
+      if (
+        n.ticks <= this._soundEngine.currentTicks &&
+        n.ticks + n.durationTicks >= this._soundEngine.currentTicks
+      ) {
+        currentNotes.push(n.midi);
+      }
+    });
+    return currentNotes;
   }
 }

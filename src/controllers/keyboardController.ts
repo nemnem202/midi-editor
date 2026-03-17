@@ -77,11 +77,9 @@ export default class KeyboardController {
 
   private copy() {
     this.copyedNotes = [];
-    this.deps.parent.midiObject.tracks.forEach((track) =>
-      track.notes.forEach((note) => {
-        if (note.isSelected) this.copyedNotes.push({ ...note });
-      }),
-    );
+    this.deps.parent.midiObject.notes.forEach((note) => {
+      if (note.isSelected) this.copyedNotes.push({ ...note });
+    });
     const offsetTicks = findFirstNoteTick(this.copyedNotes);
 
     this.copyedNotes = this.copyedNotes.map((note) => {
@@ -96,7 +94,7 @@ export default class KeyboardController {
       isSelected: true,
       ticks: note.ticks + this.deps.parent.tracklistPos,
     }));
-    this.deps.triggerMidiCommand(new AddNotesCommand(newNotes, 0));
+    this.deps.triggerMidiCommand(new AddNotesCommand(newNotes, this.deps.parent.currentTrack));
   }
 
   private cut() {
@@ -106,8 +104,7 @@ export default class KeyboardController {
 
   private moveNoteUp(of: number = 1) {
     of = Math.max(of, 0);
-    const maxMidiNote = this.deps.parent.midiObject.tracks
-      .flatMap((track) => track.notes)
+    const maxMidiNote = this.deps.parent.midiObject.notes
       .filter((n) => n.isSelected)
       .reduce((max, n) => (n.midi > max ? n.midi : max), -Infinity);
 
@@ -121,8 +118,7 @@ export default class KeyboardController {
   private moveNoteDown(of: number = 1) {
     of = Math.max(of, 0);
 
-    const minMidiNote = this.deps.parent.midiObject.tracks
-      .flatMap((track) => track.notes)
+    const minMidiNote = this.deps.parent.midiObject.notes
       .filter((n) => n.isSelected)
       .reduce((min, n) => (n.midi < min ? n.midi : min), Infinity);
 

@@ -44,7 +44,7 @@ export interface Note extends NoteJSON {
 
 export interface Track {
   name: string;
-  notes: Note[];
+  // notes: Note[];
   channel: number;
   instrument: InstrumentJSON;
   controlChanges: ControlChangesJSON;
@@ -56,6 +56,7 @@ export type MidiObject = {
   header: HeaderJSON;
   durationInTicks: number;
   tracks: Track[];
+  notes: Note[];
 };
 
 export type Rect = {

@@ -28,7 +28,7 @@ export function rearrangeMidiFile(midi: Midi) {
     grouped.get(family)!.push(track);
   }
 
-  const mergedTrackEnums = Array.from(grouped.entries()).map(([family, tracks]) => {
+  const mergedTrackEnums = Array.from(grouped.entries()).map(([_, tracks]) => {
     if (tracks.length === 1) return tracks[0];
 
     const base = tracks[0];

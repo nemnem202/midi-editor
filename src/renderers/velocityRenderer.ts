@@ -26,7 +26,7 @@ export class VelocityRenderer {
 
   draw() {
     const { container, velocityContainer, midiObject, engine } = this.deps;
-    const notes = midiObject().tracks[engine.currentTrack].notes;
+    const notes = midiObject().notes;
 
     const sortedNotes = [...notes].sort((a, b) => (a.isSelected ? 1 : -1));
 
