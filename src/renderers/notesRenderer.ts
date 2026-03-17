@@ -88,7 +88,7 @@ export class NotesRenderer {
       sprite.height = geometry.height;
 
       sprite.alpha = isCurrent ? 1 : 0.2;
-      sprite.eventMode = isCurrent ? "static" : "none";
+      sprite.eventMode = isCurrent && !isPianoRoll ? "static" : "none";
 
       if (note.isSelected) {
         sprite.tint = 0xff8888;

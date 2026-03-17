@@ -25,6 +25,7 @@ export class GridRenderer {
   }
 
   draw() {
+    console.log("draw grid");
     const { graphics, notesGrid, appScreen, midiObject, constants, engine } = this.deps;
     const strategy = engine.strategy;
     const isPianoRoll = strategy.name === "pianoroll";

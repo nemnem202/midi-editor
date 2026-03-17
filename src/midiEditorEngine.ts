@@ -139,6 +139,8 @@ export default class MidiEditorEngine {
     this.triggerMidiCommand = triggerMidiCommand;
     this.triggerProjectCommand = triggerProjectCommand;
     this.strategy = mode === "classic" ? new ClassicStrategy() : new PianoRollStrategy();
+
+    this.notes_container.eventMode = mode === "classic" ? "passive" : "none";
   }
 
   get midiObject(): MidiObject {
@@ -202,6 +204,7 @@ export default class MidiEditorEngine {
     this.layoutManager.updateMask();
 
     this.drawKeys();
+
     this.drawAllGrids();
     this.drawAllNotes();
 
@@ -246,7 +249,7 @@ export default class MidiEditorEngine {
       }
 
       this.drawAllNotes();
-      this.drawAllGrids();
+      // this.drawAllGrids();
       this._soundEngine.updateMidiObject(this.engineMidiObject);
     }
   }
@@ -264,8 +267,8 @@ export default class MidiEditorEngine {
         }
       }
       if (
-        arraysEqual(newConfig.gridSubdivisions, prevConfig.gridSubdivisions) ||
-        arraysEqual(newConfig.signature, prevConfig.signature)
+        !arraysEqual(newConfig.gridSubdivisions, prevConfig.gridSubdivisions) ||
+        !arraysEqual(newConfig.signature, prevConfig.signature)
       ) {
         this.drawAllGrids();
       }
