@@ -87,7 +87,6 @@ export class LayoutManager {
   }
 
   updateMask() {
-    console.log("update mask");
     const { app, mainMask, velocityMask, midiEditorBg, velocityBg, constants, engine } = this.deps;
     const isPianoRoll = engine.strategy.name === "pianoroll";
 

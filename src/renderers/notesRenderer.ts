@@ -33,31 +33,33 @@ export class NotesRenderer {
   }
 
   draw() {
-    console.log("drawnotes");
     const { container, midiObject, engine } = this.deps;
     const isPianoRoll = engine.strategy.name === "pianoroll";
     const rowHeight = this.getRowHeight();
     const currentTrackIndex = engine.currentTrack;
 
-    const notesToDraw = midiObject()
-      .notes.map((note) => ({
+    const notesToDraw = midiObject().tracks.flatMap((track, index) =>
+      track.notes.map((note) => ({
         note,
-        isCurrent: note.track === currentTrackIndex,
-      }))
-      .sort((a, b) => {
-        if (a.note.isSelected !== b.note.isSelected) {
-          return a.note.isSelected ? 1 : -1;
-        }
-        if (a.isCurrent !== b.isCurrent) {
-          return a.isCurrent ? 1 : -1;
-        }
+        channel: track.channel,
+        isCurrent: index === currentTrackIndex,
+      })),
+    );
 
-        return 0;
-      });
+    notesToDraw.sort((a, b) => {
+      if (a.note.isSelected !== b.note.isSelected) {
+        return a.note.isSelected ? 1 : -1;
+      }
+      if (a.isCurrent !== b.isCurrent) {
+        return a.isCurrent ? 1 : -1;
+      }
+
+      return 0;
+    });
 
     container.children.forEach((c) => (c.visible = false));
 
-    notesToDraw.forEach(({ note, isCurrent }, index) => {
+    notesToDraw.forEach(({ note, channel, isCurrent }, index) => {
       let sprite: NoteSprite;
 
       if (index < container.children.length) {
@@ -91,7 +93,7 @@ export class NotesRenderer {
       if (note.isSelected) {
         sprite.tint = 0xff8888;
       } else {
-        sprite.tint = colorFromValue(note.velocity);
+        sprite.tint = colorFromValue(channel);
       }
 
       (sprite as any).tempDuration = note.durationTicks;

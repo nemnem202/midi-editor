@@ -43,10 +43,14 @@ export function colorFromValue(value: number, whitenPercent: number = 0): string
 
 export function getMidiLength(midiObject: MidiObject): number {
   let midiLength = 0;
-  for (let j = 0, nlen = midiObject.notes.length; j < nlen; j++) {
-    const note = midiObject.notes[j];
-    const end = note.ticks + note.durationTicks;
-    if (end > midiLength) midiLength = end;
+  const tracks = midiObject.tracks;
+  for (let i = 0, tlen = tracks.length; i < tlen; i++) {
+    const notes = tracks[i].notes;
+    for (let j = 0, nlen = notes.length; j < nlen; j++) {
+      const note = notes[j];
+      const end = note.ticks + note.durationTicks;
+      if (end > midiLength) midiLength = end;
+    }
   }
 
   return midiLength;

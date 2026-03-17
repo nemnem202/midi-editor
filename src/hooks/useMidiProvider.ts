@@ -10,7 +10,7 @@ import Stats from "stats.js";
 import type { MidiObject, Project } from "types/project";
 
 export default function useMidiProvider(props: MidiProviderProps) {
-  const { initProject } = props;
+  const { initProject, children } = props;
 
   const [project, setProject] = useState<Project>(initProject);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,19 +75,16 @@ export default function useMidiProvider(props: MidiProviderProps) {
         tracks: json.tracks,
       };
       const midiObject: MidiObject = {
-        durationInTicks: initialMidiObject.durationInTicks,
-        header: initialMidiObject.header,
-        tracks: initialMidiObject.tracks.slice(0, 4).map((track) => ({
+        ...initialMidiObject,
+
+        tracks: initialMidiObject.tracks.slice(0, 4).map((track, index) => ({
           ...track,
-          notes: [],
-        })),
-        notes: initialMidiObject.tracks.flatMap((track, index) =>
-          track.notes.map((n) => ({
+          notes: track.notes.map((n) => ({
             ...n,
             isSelected: false,
             track: index,
           })),
-        ),
+        })),
       };
 
       setMidiObject({

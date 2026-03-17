@@ -1,5 +1,5 @@
 import { getTransport, Midi, Part, PolySynth, Sampler, start } from "tone";
-import type { MidiObject, Note, Project, Track } from "types/project";
+import type { MidiObject, Project, Track } from "types/project";
 
 interface TrackInstruments {
   piano: PolySynth;
@@ -66,11 +66,7 @@ export default class SoundEngine {
 
     this.midiObject.tracks.forEach((track, index) => {
       const synth = this.getInstrumentForTrack(index);
-      if (synth)
-        this.scheduleMidiEvents(
-          this.midiObject.notes.filter((n) => n.track === index),
-          synth,
-        );
+      if (synth) this.scheduleMidiEvents(track, synth);
     });
   }
 
@@ -93,7 +89,7 @@ export default class SoundEngine {
     }
   }
 
-  private scheduleMidiEvents(notes: Note[], synth: PolySynth | Sampler) {
+  private scheduleMidiEvents(track: Track, synth: PolySynth | Sampler) {
     const part = new Part(
       (time, note) => {
         synth.triggerAttackRelease(
@@ -103,7 +99,7 @@ export default class SoundEngine {
           note.velocity,
         );
       },
-      notes.map((n) => ({ ...n, time: `${n.ticks}i` })),
+      track.notes.map((n) => ({ ...n, time: `${n.ticks}i` })),
     );
 
     part.start(0);
